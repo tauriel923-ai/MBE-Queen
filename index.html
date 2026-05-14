@@ -1,0 +1,4107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a1612">
+  <meta name="description" content="MBE 律考刷题：1997 道真题，issue spotting，结构化解析，AI 重写，离线可用">
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MBE QBank">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="icon-120.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+  <link rel="apple-touch-startup-image" href="splash-1170x2532.png">
+
+<title>MBE QBank · 律考刷题</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Base palette — warm paper */
+  --paper: #faf7f2;
+  --paper-2: #f3ede2;
+  --paper-3: #ebe3d3;
+  --ink: #1a1612;
+  --ink-2: #4a4339;
+  --ink-3: #7a7065;
+  --ink-4: #a89e91;
+  --line: #d9cfbd;
+  --line-strong: #b8aa92;
+
+  /* Subject colors — each subject gets a distinct, warm but distinguishable hue */
+  --civ:   #b54a30; /* terracotta */
+  --civ-tint: #f6e4dd;
+  --con:   #3a6b8a; /* deep teal-blue */
+  --con-tint: #dfe9f0;
+  --k:     #2f7a5d; /* forest */
+  --k-tint: #dee9e2;
+  --crim:  #8a2f4a; /* burgundy */
+  --crim-tint: #ecdce2;
+  --evid:  #b3801f; /* amber */
+  --evid-tint: #f3e5c4;
+  --prop:  #5b4099; /* aubergine */
+  --prop-tint: #e6deef;
+  --tort:  #b54a78; /* rose */
+  --tort-tint: #f0dde6;
+
+  /* Semantic */
+  --correct: #2f7a5d;
+  --correct-tint: #dee9e2;
+  --wrong: #b54a30;
+  --wrong-tint: #f6e4dd;
+  --warn: #b3801f;
+
+  --shadow-soft: 0 1px 2px rgba(26,22,18,.04), 0 4px 16px rgba(26,22,18,.06);
+  --shadow-med: 0 2px 4px rgba(26,22,18,.06), 0 8px 28px rgba(26,22,18,.1);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', 'Noto Serif SC', system-ui, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.6;
+  font-size: 15.5px;
+  /* subtle paper grain */
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(181,138,75,.04), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(120,80,40,.03), transparent 50%);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.serif { font-family: 'Fraunces', 'Noto Serif SC', Georgia, serif; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ===== LAYOUT ===== */
+.app {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px 28px 80px;
+}
+
+/* ===== HEADER ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.brand-mark {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  font-variation-settings: "opsz" 144;
+}
+.brand-mark .accent { color: var(--civ); font-style: italic; font-weight: 400; }
+.brand-sub {
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover { background: var(--paper-2); border-color: var(--line-strong); color: var(--ink); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn.primary:hover { background: var(--ink-2); border-color: var(--ink-2); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.ghost:hover { background: var(--paper-2); border-color: var(--line); }
+.btn.icon { padding: 8px; width: 36px; justify-content: center; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== SCREENS ===== */
+.screen { display: none; animation: fade-in 0.3s ease; }
+.screen.active { display: block; }
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== HOME / SUBJECT PICKER ===== */
+.home-hero {
+  padding: 28px 0 36px;
+}
+.home-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(36px, 6vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+  font-variation-settings: "opsz" 144;
+}
+.home-title em { font-style: italic; color: var(--ink-2); font-weight: 500; }
+.home-title .ch { font-family: 'Noto Serif SC', serif; font-size: 0.7em; margin-left: 0.4em; color: var(--ink-3); }
+
+.home-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin: 24px 0 32px;
+  padding: 20px 24px;
+  background: var(--paper-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+.stat-cell { display: flex; flex-direction: column; gap: 2px; }
+.stat-num {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.stat-label {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.section-label {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 32px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.subject-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.subject-card {
+  position: relative;
+  padding: 20px 18px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  text-align: left;
+  font-family: inherit;
+  appearance: none;
+  color: inherit;
+}
+.subject-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-med);
+  border-color: var(--line-strong);
+}
+.subject-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--subj-color, var(--ink));
+}
+.subj-name-en {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+}
+.subj-name-cn {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-bottom: 16px;
+  font-family: 'Noto Serif SC', serif;
+}
+.subj-stats {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.subj-stats b {
+  color: var(--subj-color);
+  font-weight: 600;
+}
+.subj-progress {
+  height: 4px;
+  background: var(--paper-3);
+  border-radius: 2px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.subj-progress-fill {
+  height: 100%;
+  background: var(--subj-color);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.home-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+@media (max-width: 600px) { .home-grid-2 { grid-template-columns: 1fr; } }
+
+.action-card {
+  padding: 24px 22px;
+  border-radius: var(--radius);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: inherit;
+  appearance: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.action-card:hover {
+  background: var(--paper-2);
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+.action-card.featured {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.action-card.featured:hover {
+  background: var(--ink-2);
+}
+.action-card.featured.dim {
+  opacity: 0.5;
+  cursor: default;
+}
+.action-card-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+.action-card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+.action-card-desc {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+.action-card-badge {
+  font-size: 11px;
+  background: var(--wrong);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+/* ===== QUIZ SCREEN ===== */
+.quiz-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.quiz-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.subj-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--subj-tint);
+  color: var(--subj-color);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.subj-tag::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--subj-color);
+}
+
+.progress-bar {
+  height: 3px;
+  background: var(--paper-3);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--subj-color, var(--ink));
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.timer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.timer.warn { color: var(--warn); }
+.timer-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--correct);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Question card */
+.question-stem {
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--ink);
+  margin-bottom: 28px;
+  font-weight: 400;
+}
+.question-stem.zh {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 16px;
+}
+.question-stem p { margin: 0 0 14px; }
+.question-stem p:last-child { margin-bottom: 0; }
+
+/* Term tooltip annotation */
+/* Term annotations — Tier 1 (high-value) and Tier 2 (subtle) */
+.term {
+  cursor: help;
+  position: relative;
+  padding: 0 2px;
+  border-radius: 3px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+/* Tier 1 — high-value, bold colored callout */
+.term-t1 {
+  background: var(--evid-tint);
+  color: #6a4a0f;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(179,128,31,.18);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+.term-t1:hover {
+  background: #f0d99a;
+  box-shadow: 0 0 0 1px rgba(179,128,31,.4), 0 2px 6px rgba(179,128,31,.18);
+}
+/* Tier 2 — subtle dashed underline */
+.term-t2 {
+  border-bottom: 1px dashed var(--ink-4);
+  color: var(--ink);
+  font-weight: 500;
+}
+.term-t2:hover {
+  background: rgba(179,128,31,.1);
+  border-bottom-color: var(--ink-3);
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-family: 'Noto Serif SC', 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+  white-space: normal;
+  width: max-content;
+  max-width: 320px;
+  min-width: 200px;
+  box-shadow: var(--shadow-med);
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+}
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--ink);
+}
+.term:hover .tooltip {
+  opacity: 1;
+  pointer-events: auto;
+}
+.tooltip .term-en {
+  color: rgba(255,255,255,0.55);
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.tooltip .term-cn {
+  color: #f6e4a8;
+  font-size: 14.5px;
+  font-weight: 600;
+  font-family: 'Noto Serif SC', serif;
+}
+.tooltip .term-hint {
+  color: rgba(255,255,255,0.85);
+  font-size: 12.5px;
+  line-height: 1.55;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
+.tooltip-link {
+  appearance: none;
+  background: rgba(179,128,31,0.2);
+  color: #f6e4a8;
+  border: 1px solid rgba(246,228,168,0.3);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 4px;
+  align-self: flex-start;
+  transition: all 0.15s;
+}
+.tooltip-link:hover {
+  background: rgba(246,228,168,0.25);
+  color: #fff;
+}
+
+/* Choices */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  appearance: none;
+  width: 100%;
+}
+.choice:hover:not(.locked) {
+  border-color: var(--ink-3);
+  background: var(--paper-2);
+}
+.choice-letter {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink-2);
+  transition: all 0.18s ease;
+}
+.choice-text { flex: 1; }
+.choice:hover .choice-letter { background: var(--paper-3); }
+
+.choice.selected {
+  border-color: var(--ink-2);
+  background: var(--paper-2);
+}
+.choice.selected .choice-letter {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.choice.correct {
+  border-color: var(--correct);
+  background: var(--correct-tint);
+}
+.choice.correct .choice-letter {
+  background: var(--correct);
+  color: white;
+  border-color: var(--correct);
+}
+.choice.wrong {
+  border-color: var(--wrong);
+  background: var(--wrong-tint);
+}
+.choice.wrong .choice-letter {
+  background: var(--wrong);
+  color: white;
+  border-color: var(--wrong);
+}
+.choice.locked { cursor: default; }
+.choice.dim { opacity: 0.5; }
+
+/* Quiz controls */
+.quiz-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.quiz-controls-left, .quiz-controls-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Result feedback */
+.feedback {
+  display: none;
+  margin: 22px 0 24px;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  animation: slide-in 0.35s ease;
+}
+.feedback.show { display: block; }
+.feedback.correct { background: var(--correct-tint); border-left: 4px solid var(--correct); }
+.feedback.wrong { background: var(--wrong-tint); border-left: 4px solid var(--wrong); }
+.feedback-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.feedback.correct .feedback-head { color: var(--correct); }
+.feedback.wrong .feedback-head { color: var(--wrong); }
+.feedback-sub { font-size: 13.5px; color: var(--ink-2); }
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Explanation */
+.explanation-wrap {
+  margin: 20px 0 0;
+  padding: 24px;
+  background: var(--paper-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  animation: slide-in 0.35s ease 0.1s backwards;
+}
+.explanation-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.explanation-title {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.explanation-title::before {
+  content: '';
+  width: 3px;
+  height: 18px;
+  background: var(--subj-color, var(--ink));
+  border-radius: 2px;
+}
+.explanation-body {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--ink-2);
+}
+.explanation-body.zh {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14.5px;
+}
+.explanation-body p { margin: 0 0 12px; }
+.explanation-body p:last-child { margin-bottom: 0; }
+.explanation-body .ex-list,
+.question-stem .ex-list {
+  list-style: none;
+  padding: 4px 0 4px 0;
+  margin: 6px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.explanation-body .ex-list li,
+.question-stem .ex-list li {
+  position: relative;
+  padding-left: 18px;
+  line-height: 1.65;
+}
+.explanation-body .ex-list li::before,
+.question-stem .ex-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.7em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--subj-color, var(--ink-3));
+  opacity: 0.7;
+}
+.objective {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line-strong);
+}
+.objective-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.objective-text {
+  font-family: 'Fraunces', serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.65;
+  font-style: italic;
+}
+.objective-text.zh {
+  font-family: 'Noto Serif SC', serif;
+  font-style: normal;
+}
+
+/* Lang switch */
+.lang-switch {
+  display: inline-flex;
+  background: var(--paper-2);
+  border-radius: 8px;
+  padding: 2px;
+  border: 1px solid var(--line);
+}
+.lang-switch button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--ink-3);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.lang-switch button.active {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+/* Loading state */
+.loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-3);
+  font-size: 13px;
+  font-style: italic;
+}
+.loading::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--line);
+  border-top-color: var(--ink-2);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Quiz session complete */
+.complete-card {
+  padding: 40px 32px;
+  background: var(--paper);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  text-align: center;
+}
+.complete-emoji {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.complete-title {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.complete-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 28px 0;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.complete-stat-num {
+  font-family: 'Fraunces', serif;
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.complete-stat-label {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Stats screen */
+.stats-section {
+  margin-bottom: 32px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+.stat-tile {
+  padding: 20px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.stat-tile-num {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.stat-tile-label {
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+.subj-stats-table {
+  margin-top: 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.subj-stats-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 100px 100px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.subj-stats-row:last-child { border-bottom: none; }
+.subj-stats-row.header {
+  font-size: 11px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--paper-2);
+}
+.subj-stats-name { font-weight: 500; }
+.subj-stats-bar {
+  height: 6px;
+  background: var(--paper-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.subj-stats-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+@media (max-width: 600px) {
+  .subj-stats-row {
+    grid-template-columns: 1fr 60px;
+    gap: 8px;
+  }
+  .subj-stats-row > *:nth-child(3),
+  .subj-stats-row > *:nth-child(4) { display: none; }
+}
+
+/* Wrong Bag — review queue */
+.review-empty {
+  padding: 40px;
+  text-align: center;
+  background: var(--paper);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--ink-3);
+}
+.review-empty-icon { font-size: 36px; margin-bottom: 8px; }
+.review-empty-title { font-family: 'Fraunces', serif; font-size: 20px; color: var(--ink); margin-bottom: 4px; }
+
+/* SRS card */
+.srs-card {
+  margin-top: 12px;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.srs-card:hover { border-color: var(--line-strong); background: var(--paper-2); }
+.srs-card-meta { font-size: 12px; color: var(--ink-3); }
+.srs-card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.4;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.srs-card-due {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--paper-3);
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+.srs-card-due.overdue { background: var(--wrong-tint); color: var(--wrong); }
+.srs-card-due.today { background: var(--evid-tint); color: var(--evid); }
+
+/* Quality buttons (SRS rating) */
+.srs-quality {
+  display: none;
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  animation: slide-in 0.3s ease;
+}
+.srs-quality.show { display: block; }
+.srs-quality-label {
+  font-size: 12px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.srs-quality-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.srs-q-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  padding: 12px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: all 0.15s;
+}
+.srs-q-btn:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+.srs-q-btn-label {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.srs-q-btn-sub {
+  display: block;
+  font-size: 10.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.srs-q-btn.q-again { color: var(--wrong); border-color: var(--wrong-tint); }
+.srs-q-btn.q-again:hover { background: var(--wrong-tint); }
+.srs-q-btn.q-hard { color: var(--warn); }
+.srs-q-btn.q-good { color: var(--con); }
+.srs-q-btn.q-easy { color: var(--correct); border-color: var(--correct-tint); }
+.srs-q-btn.q-easy:hover { background: var(--correct-tint); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: var(--shadow-med);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s ease;
+  z-index: 100;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Keyboard hint */
+.kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  margin: 0 2px;
+}
+
+/* Icon button (small, for inline actions like Google Translate launcher) */
+.btn.icon-btn {
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+/* Key hints banner — Chinese guidance above stem */
+.key-hints {
+  margin: -8px 0 22px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--evid-tint), rgba(243,229,196,0.5));
+  border-left: 3px solid var(--evid);
+  border-radius: 8px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13.5px;
+  color: #6a4a0f;
+  line-height: 1.6;
+  animation: slide-in 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.key-hints-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: rgba(106,74,15,0.7);
+  margin-bottom: 2px;
+}
+.key-hints-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.key-hint-item {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.key-hint-en {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--evid);
+  white-space: nowrap;
+}
+.key-hint-en::after { content: ' ·'; opacity: 0.5; padding-left: 2px; }
+.key-hint-cn {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+/* Explanation summary card — Chinese key takeaway above full explanation */
+.exp-summary {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  background: var(--paper);
+  border-radius: 10px;
+  border: 1px dashed var(--line-strong);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink);
+  position: relative;
+}
+.exp-summary::before {
+  content: '💡 一句话要点';
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  background: var(--paper-2);
+  padding: 0 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+.exp-summary-content {
+  margin-top: 2px;
+}
+.exp-summary-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  background: var(--subj-tint, var(--paper-3));
+  color: var(--subj-color, var(--ink-2));
+  font-weight: 600;
+  border-radius: 4px;
+  font-size: 13px;
+  margin: 0 2px;
+}
+
+/* Related comparison tables strip */
+.related-tables {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line-strong);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.related-tables-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  margin-right: 6px;
+}
+.related-table-chip {
+  appearance: none;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.related-table-chip:hover {
+  background: var(--evid-tint);
+  border-color: var(--evid);
+  color: #6a4a0f;
+  transform: translateY(-1px);
+}
+.related-table-chip::before {
+  content: '📑 ';
+  font-size: 11px;
+}
+
+/* ===== ISSUE SPOTTER CARD — the "题眼" card above the stem ===== */
+.issue-spot {
+  margin: -8px 0 18px;
+  padding: 16px 18px 14px;
+  background: linear-gradient(135deg, #fbe5db 0%, #f7d4c4 100%);
+  border-left: 4px solid #b54a30;
+  border-radius: 10px;
+  position: relative;
+  animation: slide-in 0.3s ease;
+}
+.issue-spot-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #8a3320;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.issue-spot-title {
+  font-family: 'Fraunces', 'Noto Serif SC', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: #6a2515;
+  line-height: 1.35;
+  margin-bottom: 8px;
+  letter-spacing: -0.005em;
+}
+.issue-spot-strategy {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #6a2515;
+  background: rgba(255,255,255,0.45);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 2px solid #b54a30;
+}
+
+/* Trigger phrase — the literal words in the stem that are the "issue spotter" */
+.issue-trigger {
+  background: rgba(181,74,48,0.18);
+  color: #6a2515;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(181,74,48,0.35);
+  box-shadow: 0 1px 2px rgba(181,74,48,0.1);
+  position: relative;
+}
+.issue-trigger::after {
+  content: '🎯';
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  font-size: 10px;
+  background: white;
+  border-radius: 50%;
+  padding: 2px 3px;
+  border: 1px solid rgba(181,74,48,0.3);
+}
+
+/* ===== VOCAB annotations (Tier-3 lite blue, separate from legal terms) ===== */
+.vocab {
+  position: relative;
+  cursor: help;
+  background: linear-gradient(transparent 65%, rgba(58,107,138,0.18) 65%);
+  color: var(--ink);
+  padding: 0 1px;
+  border-bottom: 1px dotted rgba(58,107,138,0.45);
+  transition: background 0.15s;
+}
+.vocab:hover {
+  background: linear-gradient(transparent 65%, rgba(58,107,138,0.35) 65%);
+}
+.vocab .vocab-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1d3a4c;
+  color: #e6f0f5;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-family: 'Noto Serif SC', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: normal;
+  width: max-content;
+  max-width: 240px;
+  box-shadow: var(--shadow-med);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.vocab .vocab-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1d3a4c;
+}
+.vocab .vocab-tip-en {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: rgba(230,240,245,0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-bottom: 2px;
+}
+.vocab:hover .vocab-tip {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ===== STRUCTURED EXPLANATION — sectional rendering ===== */
+.expl-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Section card base */
+.expl-section {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid;
+}
+.expl-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.expl-section-emoji {
+  font-size: 15px;
+  line-height: 1;
+}
+.expl-section-body {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.expl-section-body p { margin: 0 0 10px; }
+.expl-section-body p:last-child { margin-bottom: 0; }
+.expl-section-body.zh { font-family: 'Noto Serif SC', serif; }
+
+/* 📖 Core Rule — blue */
+.expl-rule {
+  background: linear-gradient(180deg, #eef4f9 0%, #e2ecf4 100%);
+  border-color: #b9d0e1;
+}
+.expl-rule .expl-section-head { color: #2b5673; }
+
+/* 🔍 Analysis — green */
+.expl-analysis {
+  background: linear-gradient(180deg, #e8f2eb 0%, #dceadf 100%);
+  border-color: #b6d4be;
+}
+.expl-analysis .expl-section-head { color: #2a5a3c; }
+
+/* Per-choice analysis cards */
+.expl-section-divider {
+  margin: 4px 0 -4px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+.expl-section-divider .expl-section-emoji {
+  font-size: 14px;
+}
+.expl-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.expl-choice {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+.expl-choice-letter {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 14px;
+}
+.expl-choice-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  margin-top: 2px;
+}
+.expl-choice-text {
+  flex: 1;
+}
+.expl-choice-text strong {
+  color: inherit;
+  font-weight: 600;
+}
+.expl-choice.correct {
+  background: linear-gradient(180deg, #e8f2eb 0%, #dceadf 100%);
+  border-color: #95c2a3;
+}
+.expl-choice.correct .expl-choice-letter {
+  background: var(--correct);
+  color: white;
+}
+.expl-choice.correct .expl-choice-icon { color: var(--correct); }
+.expl-choice.wrong {
+  background: linear-gradient(180deg, #f6e9e5 0%, #f0dad3 100%);
+  border-color: #d9a797;
+}
+.expl-choice.wrong .expl-choice-letter {
+  background: var(--wrong);
+  color: white;
+}
+.expl-choice.wrong .expl-choice-icon { color: var(--wrong); }
+
+/* 💡 Tip — yellow (锦囊妙计) */
+.expl-tip {
+  background: linear-gradient(180deg, #fcf3dc 0%, #f9ead0 100%);
+  border-color: #e6cb87;
+}
+.expl-tip .expl-section-head { color: #7a5a18; }
+.expl-tip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #6a4f12;
+}
+.expl-tip-item {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.expl-tip-item::before {
+  content: '→';
+  font-weight: 700;
+  color: #b3801f;
+  flex-shrink: 0;
+}
+
+/* 📚 Extended Learning — purple */
+.expl-extend {
+  background: linear-gradient(180deg, #ede8f5 0%, #e0d8ee 100%);
+  border-color: #b8a8d7;
+}
+.expl-extend .expl-section-head { color: #4a3580; }
+.extend-row {
+  margin-bottom: 12px;
+}
+.extend-row:last-child { margin-bottom: 0; }
+.extend-row-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6a5099;
+  margin-bottom: 6px;
+}
+.extend-chip {
+  appearance: none;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(91,64,153,0.3);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #4a3580;
+  cursor: pointer;
+  margin: 0 4px 4px 0;
+  transition: all 0.15s;
+}
+.extend-chip:hover {
+  background: rgba(91,64,153,0.15);
+  border-color: #5b4099;
+  transform: translateY(-1px);
+}
+.extend-chip-cn {
+  color: #6a5099;
+  font-weight: 400;
+  margin-left: 4px;
+}
+.extend-chip.table::before { content: '📑 '; }
+.extend-chip.term::before { content: '🔖 '; }
+
+/* AI rewrite panel (DeepSeek) */
+.ai-panel {
+  margin: 10px 0;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #eef4f9, #f3e9f6);
+  border: 1px solid rgba(91,64,153,0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ai-panel-info {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.ai-panel-info-tag {
+  background: rgba(91,64,153,0.15);
+  color: #5b4099;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.ai-panel-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* AI-generated explanation result block */
+.ai-result {
+  margin-top: 12px;
+  padding: 16px 18px;
+  background: linear-gradient(180deg, #f7f1fb 0%, #ede8f5 100%);
+  border: 1px solid rgba(91,64,153,0.25);
+  border-radius: 12px;
+  font-family: 'Noto Serif SC', 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink);
+  position: relative;
+}
+.ai-result::before {
+  content: '✨ AI 重写解析 · ' attr(data-provider);
+  position: absolute;
+  top: -9px;
+  left: 14px;
+  background: white;
+  padding: 0 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5b4099;
+}
+.ai-result p { margin: 0 0 10px; }
+.ai-result p:last-child { margin-bottom: 0; }
+.ai-result h3, .ai-result h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 14px 0 6px;
+  color: #4a3580;
+}
+.ai-result h3:first-child, .ai-result h4:first-child { margin-top: 0; }
+.ai-result ul, .ai-result ol {
+  margin: 6px 0 10px;
+  padding-left: 22px;
+}
+.ai-result li { margin-bottom: 4px; }
+.ai-result code {
+  background: rgba(91,64,153,0.1);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12.5px;
+}
+.ai-result strong { color: #4a3580; }
+
+/* Markdown tables inside AI output */
+.ai-result .md-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 10px 0 12px;
+  font-size: 13px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(91,64,153,0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ai-result .md-table th {
+  background: rgba(91,64,153,0.12);
+  color: #4a3580;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1.5px solid rgba(91,64,153,0.3);
+}
+.ai-result .md-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(91,64,153,0.12);
+  vertical-align: top;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.ai-result .md-table tr:last-child td { border-bottom: none; }
+.ai-result .md-table tr:hover td { background: rgba(91,64,153,0.05); }
+.ai-result .md-table td:first-child {
+  font-weight: 600;
+  color: #4a3580;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .ai-result .md-table { font-size: 12px; }
+  .ai-result .md-table th, .ai-result .md-table td { padding: 6px 7px; }
+  .ai-result .md-table td:first-child { white-space: normal; }
+}
+
+/* Bilingual term pair: "hearsay 传闻证据" → English in mono blue, Chinese bold purple */
+.md-bilingual {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  background: linear-gradient(transparent 55%, rgba(91,64,153,0.14) 55%);
+  padding: 0 3px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.md-bilingual-en {
+  font-family: 'Fraunces', 'JetBrains Mono', serif;
+  font-style: italic;
+  font-weight: 600;
+  color: #5b4099;
+  font-size: 0.95em;
+}
+.md-bilingual-cn {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 700;
+  color: #2f1f5c;
+  font-size: 0.95em;
+}
+/* When wrapping is unavoidable on mobile, let it break naturally */
+@media (max-width: 600px) {
+  .md-bilingual { white-space: normal; display: inline; }
+}
+
+/* Subtle visual emphasis for sections matching the in-app palette.
+   AI output uses ### headings that mention these emoji — color the heading accordingly. */
+.ai-result h3 {
+  border-bottom: 1px dashed rgba(91,64,153,0.2);
+  padding-bottom: 4px;
+}
+
+/* AI setup modal */
+.ai-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13.5px;
+}
+.ai-setup label {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.ai-setup input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.ai-setup input:focus {
+  outline: none;
+  border-color: #5b4099;
+  box-shadow: 0 0 0 3px rgba(91,64,153,0.1);
+}
+.ai-setup-hint {
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+.ai-setup-hint a {
+  color: #5b4099;
+  text-decoration: underline;
+}
+.ai-setup-providers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.ai-setup-provider {
+  appearance: none;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.15s;
+}
+.ai-setup-provider:hover { border-color: var(--ink-3); }
+.ai-setup-provider.active {
+  border-color: #5b4099;
+  background: rgba(91,64,153,0.08);
+  box-shadow: 0 0 0 2px rgba(91,64,153,0.1);
+}
+.ai-setup-provider-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.ai-setup-provider-desc {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,22,18,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fade-in 0.2s;
+}
+.modal-backdrop.show { display: flex; }
+.modal {
+  background: var(--paper);
+  border-radius: 16px;
+  max-width: 760px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  animation: modal-pop 0.25s ease;
+}
+@keyframes modal-pop {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.modal-head {
+  padding: 22px 26px 16px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.modal-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--evid-tint);
+  color: var(--evid);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.modal-body {
+  padding: 20px 26px;
+  overflow-y: auto;
+  flex: 1;
+}
+.modal-foot {
+  padding: 14px 26px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--paper-2);
+  border-radius: 0 0 16px 16px;
+}
+
+.cmp-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.5px;
+  font-family: 'Inter', 'Noto Serif SC', sans-serif;
+}
+.cmp-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--paper-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-2);
+  border-bottom: 1.5px solid var(--line-strong);
+  position: sticky;
+  top: 0;
+}
+.cmp-table th:first-child { border-top-left-radius: 8px; }
+.cmp-table th:last-child { border-top-right-radius: 8px; }
+.cmp-table td {
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  line-height: 1.55;
+}
+.cmp-table tr:last-child td { border-bottom: none; }
+.cmp-table tr:hover td { background: var(--paper-2); }
+.cmp-table td:first-child {
+  font-weight: 600;
+  color: var(--ink);
+  font-family: 'Fraunces', serif;
+  white-space: nowrap;
+}
+.cmp-related-terms {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--paper-2);
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.cmp-related-terms strong { color: var(--ink-2); font-weight: 600; }
+
+@media (max-width: 600px) {
+  .cmp-table { font-size: 12.5px; }
+  .cmp-table th, .cmp-table td { padding: 8px 8px; }
+  .modal-head, .modal-body, .modal-foot { padding-left: 18px; padding-right: 18px; }
+}
+
+@media (max-width: 600px) {
+  .app { padding: 16px 18px 60px; }
+  .question-stem { font-size: 16px; }
+  .choice { padding: 14px; }
+  .home-title { font-size: 36px; }
+}
+</style>
+</head>
+<body>
+<div id="boot-screen" style="position:fixed;inset:0;background:#1a1612;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#faf7f2;font-family:'Fraunces',serif">
+  <div style="font-size:64px;font-weight:600;letter-spacing:-2px;line-height:1">M<span style="color:#b54a30;font-style:italic;font-weight:400">·</span>B<span style="color:#b54a30;font-style:italic;font-weight:400">·</span>E</div>
+  <div style="margin-top:12px;color:#a89e91;font-family:'Noto Serif SC',serif;font-size:14px;letter-spacing:6px">律考刷题</div>
+  <div style="margin-top:32px;width:24px;height:24px;border:3px solid rgba(255,255,255,0.15);border-top-color:#b54a30;border-radius:50%;animation:bs 0.8s linear infinite"></div>
+  <style>@keyframes bs{to{transform:rotate(360deg)}}</style>
+</div>
+
+
+<div class="app">
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div class="brand">
+    <div class="brand-mark">M<span class="accent">·</span>B<span class="accent">·</span>E</div>
+    <div class="brand-sub">QBank · 律考刷题</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn ghost" id="nav-home" title="首页">← Home</button>
+    <button class="btn ghost" id="nav-stats" title="数据统计">📊 Stats</button>
+  </div>
+</header>
+
+<!-- ===== HOME SCREEN ===== -->
+<section class="screen active" id="screen-home">
+  <div class="home-hero">
+    <h1 class="home-title">
+      Sharpen your <em>argument</em>.<br>
+      <span class="ch">律考训练，专注即正义。</span>
+    </h1>
+  </div>
+
+  <div class="home-stats" id="home-stats-grid">
+    <!-- filled by JS -->
+  </div>
+
+  <div class="home-grid-2">
+    <button class="action-card featured" id="action-resume">
+      <span class="action-card-label">继续 · Continue</span>
+      <span class="action-card-title" id="resume-title">混合练习</span>
+      <span class="action-card-desc" id="resume-desc">10 道题 · 全科目</span>
+    </button>
+    <button class="action-card" id="action-review">
+      <span class="action-card-label">📌 错题回顾 · Wrong Bag</span>
+      <span class="action-card-title" id="review-title">错题库</span>
+      <span class="action-card-desc" id="review-desc">基于记忆曲线的智能复习</span>
+      <span class="action-card-badge" id="review-badge" style="display:none">0 待复习</span>
+    </button>
+  </div>
+
+  <div class="section-label">按科目刷题 · By Subject</div>
+  <div class="subject-grid" id="subject-grid">
+    <!-- filled by JS -->
+  </div>
+</section>
+
+<!-- ===== QUIZ SCREEN ===== -->
+<section class="screen" id="screen-quiz">
+  <div class="quiz-topbar">
+    <div class="quiz-meta">
+      <span class="subj-tag" id="quiz-subj-tag"></span>
+      <span id="quiz-progress-text" class="mono">1 / 10</span>
+    </div>
+    <div class="quiz-meta">
+      <div class="lang-switch" id="lang-switch">
+        <button data-lang="en" class="active">EN</button>
+        <button data-lang="zh">中文</button>
+      </div>
+      <button class="btn icon-btn" id="btn-open-google" title="在 Google 翻译中打开整道题">
+        <span style="font-size:14px">🌐</span>
+      </button>
+      <div class="timer" id="quiz-timer"><span class="timer-dot"></span><span id="timer-display">00:00</span></div>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-bar-fill" id="quiz-progress-fill" style="width:0%"></div></div>
+
+  <!-- 🎯 题眼 / Issue Spotter — appears above stem when a pattern matches -->
+  <div class="issue-spot" id="issue-spot" style="display:none"></div>
+
+  <!-- Key vocabulary hints from glossary -->
+  <div class="key-hints" id="key-hints" style="display:none"></div>
+
+  <div class="question-stem" id="question-stem"></div>
+
+  <div class="choices" id="choices"></div>
+
+  <div class="feedback" id="feedback">
+    <div class="feedback-head" id="feedback-head"></div>
+    <div class="feedback-sub" id="feedback-sub"></div>
+  </div>
+
+  <div class="explanation-wrap" id="explanation-wrap" style="display:none">
+    <div class="explanation-head">
+      <div class="explanation-title">解析 · Explanation</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn" id="translate-btn">🌐 中文翻译</button>
+        <button class="btn" id="btn-open-google-exp" title="在 Google 翻译中打开解析">↗</button>
+      </div>
+    </div>
+
+    <!-- One-line summary -->
+    <div class="exp-summary" id="exp-summary"></div>
+
+    <!-- AI rewrite control panel -->
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-panel-info">
+        <span class="ai-panel-info-tag">✨ AI 重写</span>
+        <span id="ai-panel-status">让大模型用中文重新讲一遍解析</span>
+      </div>
+      <div class="ai-panel-actions">
+        <button class="btn" id="btn-ai-setup">⚙ 设置</button>
+        <button class="btn primary" id="btn-ai-rewrite">重写解析</button>
+      </div>
+    </div>
+
+    <!-- AI result block (appears after AI call) -->
+    <div id="ai-result-container"></div>
+
+    <!-- Structured native explanation (4 sections) -->
+    <div class="expl-sections" id="expl-sections"></div>
+
+    <!-- Educational objective (original UWorld) -->
+    <div class="objective" id="objective-wrap">
+      <div class="objective-label">📌 Educational Objective · 一句话知识点</div>
+      <div class="objective-text" id="objective-text"></div>
+    </div>
+
+    <!-- Extended learning + related tables -->
+    <div id="expl-extend-wrap"></div>
+  </div>
+
+  <div class="srs-quality" id="srs-quality">
+    <div class="srs-quality-label">这道题的掌握程度? · How well did you know it?</div>
+    <div class="srs-quality-row">
+      <button class="srs-q-btn q-again" data-q="0"><span class="srs-q-btn-label">Again</span><span class="srs-q-btn-sub">不会 · 10min</span></button>
+      <button class="srs-q-btn q-hard" data-q="3"><span class="srs-q-btn-label">Hard</span><span class="srs-q-btn-sub">勉强 · 1d</span></button>
+      <button class="srs-q-btn q-good" data-q="4"><span class="srs-q-btn-label">Good</span><span class="srs-q-btn-sub">会 · ~4d</span></button>
+      <button class="srs-q-btn q-easy" data-q="5"><span class="srs-q-btn-label">Easy</span><span class="srs-q-btn-sub">轻松 · ~7d</span></button>
+    </div>
+  </div>
+
+  <div class="quiz-controls" style="margin-top:24px">
+    <div class="quiz-controls-left">
+      <button class="btn ghost" id="btn-exit">← 退出</button>
+    </div>
+    <div class="quiz-controls-right">
+      <span style="font-size:11.5px;color:var(--ink-3);margin-right:6px">
+        <span class="kbd">A</span><span class="kbd">B</span><span class="kbd">C</span><span class="kbd">D</span> · <span class="kbd">↵</span>
+      </span>
+      <button class="btn primary" id="btn-next" disabled>下一题 →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COMPLETE SCREEN ===== -->
+<section class="screen" id="screen-complete">
+  <div class="complete-card">
+    <div class="complete-emoji" id="complete-emoji">✨</div>
+    <div class="complete-title" id="complete-title">一组结束</div>
+    <div style="color:var(--ink-3);font-size:14px" id="complete-sub">不错的一轮</div>
+    <div class="complete-stats">
+      <div>
+        <div class="complete-stat-num" id="c-correct">0</div>
+        <div class="complete-stat-label">Correct</div>
+      </div>
+      <div>
+        <div class="complete-stat-num" id="c-total">0</div>
+        <div class="complete-stat-label">Answered</div>
+      </div>
+      <div>
+        <div class="complete-stat-num" id="c-time">0:00</div>
+        <div class="complete-stat-label">Time</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn primary" id="btn-continue">再来一组</button>
+      <button class="btn" id="btn-back-home">回到首页</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STATS SCREEN ===== -->
+<section class="screen" id="screen-stats">
+  <h2 style="font-family:'Fraunces',serif;font-size:32px;font-weight:500;margin:0 0 24px;letter-spacing:-0.02em">数据统计 <em style="color:var(--ink-3);font-style:italic">Your stats</em></h2>
+
+  <div class="stats-section">
+    <div class="stats-grid" id="overall-stats">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <div class="stats-section">
+    <div class="section-label">分科目表现 · By Subject</div>
+    <div class="subj-stats-table" id="subj-stats-table">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <div class="stats-section">
+    <div class="section-label">错题库 · Wrong Bag (SRS)</div>
+    <div id="wrong-bag-list"></div>
+  </div>
+
+  <div class="stats-section">
+    <button class="btn" id="btn-reset" style="color:var(--wrong);border-color:var(--wrong-tint)">⚠ 重置所有进度</button>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<!-- Comparison table modal -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" id="modal-comparison">
+    <div class="modal-head">
+      <div>
+        <div class="modal-tag" id="modal-tag"></div>
+        <h2 class="modal-title" id="modal-title"></h2>
+      </div>
+      <button class="btn icon" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot">
+      <div style="font-size:12px;color:var(--ink-3)">📌 这些知识点在 MBE 中经常成对/成组出题，对比记忆事半功倍</div>
+      <button class="btn ghost" id="modal-close-2">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI setup modal -->
+<div class="modal-backdrop" id="ai-modal-backdrop">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <div>
+        <div class="modal-tag" style="background:rgba(91,64,153,0.15);color:#5b4099">✨ AI Setup</div>
+        <h2 class="modal-title">配置 AI 重写解析</h2>
+      </div>
+      <button class="btn icon" id="ai-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="ai-setup">
+        <div>
+          <label>选择 AI 服务</label>
+          <div class="ai-setup-providers" id="ai-provider-select">
+            <button class="ai-setup-provider" data-provider="deepseek">
+              <div class="ai-setup-provider-name">DeepSeek</div>
+              <div class="ai-setup-provider-desc">国内可访问，中文好<br>$0.14/百万 token</div>
+            </button>
+            <button class="ai-setup-provider" data-provider="openrouter">
+              <div class="ai-setup-provider-name">OpenRouter</div>
+              <div class="ai-setup-provider-desc">支持免费模型<br>多模型可选</div>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label for="ai-key-input">API Key</label>
+          <input type="password" id="ai-key-input" placeholder="sk-...">
+          <div class="ai-setup-hint" id="ai-setup-hint"></div>
+        </div>
+        <div>
+          <label for="ai-model-input">模型（可选，留空用默认）</label>
+          <input type="text" id="ai-model-input" placeholder="deepseek-chat">
+        </div>
+        <div id="ai-test-result" style="display:none"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div style="font-size:12px;color:var(--ink-3)">🔒 Key 仅存本地 localStorage</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="ai-modal-test">🧪 测试连接</button>
+        <button class="btn ghost" id="ai-modal-cancel">取消</button>
+        <button class="btn primary" id="ai-modal-save">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// =====================================================================
+// DATA — questions and glossary inlined at build time
+// =====================================================================
+// Data — loaded asynchronously from /data/*.json so the Service Worker can
+// cache them separately and the HTML stays small.
+let QUESTIONS = null;
+let GLOSSARY_DATA = null;
+let __DATA_READY = false;
+
+const SUBJECTS = {
+  "Civil Procedure":    { cn: "民事诉讼程序",  color: "var(--civ)",  tint: "var(--civ-tint)",  short: "CIV" },
+  "Constitutional Law": { cn: "宪法",          color: "var(--con)",  tint: "var(--con-tint)",  short: "CON" },
+  "Contracts":          { cn: "合同法",        color: "var(--k)",    tint: "var(--k-tint)",    short: "K"   },
+  "Criminal Law":       { cn: "刑法与刑诉",    color: "var(--crim)", tint: "var(--crim-tint)", short: "CRIM"},
+  "Evidence":           { cn: "证据法",        color: "var(--evid)", tint: "var(--evid-tint)", short: "EVID"},
+  "Real Property":      { cn: "不动产法",      color: "var(--prop)", tint: "var(--prop-tint)", short: "PROP"},
+  "Torts":              { cn: "侵权法",        color: "var(--tort)", tint: "var(--tort-tint)", short: "TORT"},
+};
+
+// =====================================================================
+// STORAGE — LocalStorage wrapper for persistence
+// =====================================================================
+const STORAGE_KEY = "mbe-qbank-v1";
+const DEFAULT_STATE = {
+  answered: {}, // qId -> { ts, correct, choice, timeSec, subject }
+  srs: {},      // qId -> { ef, interval, reps, due (ms timestamp), lastReviewed }
+  totalTime: 0, // total seconds studied
+  sessions: 0,
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_STATE };
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_STATE, ...parsed };
+  } catch (e) {
+    console.error("Failed to load state", e);
+    return { ...DEFAULT_STATE };
+  }
+}
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.error("Failed to save state", e);
+  }
+}
+
+let state = loadState();
+
+// =====================================================================
+// SRS — SuperMemo SM-2 algorithm (adapted, simplified)
+// quality: 0 = Again (forgot), 3 = Hard, 4 = Good, 5 = Easy
+// =====================================================================
+const MS_PER_DAY = 86400000;
+const MS_PER_MIN = 60000;
+
+function srsUpdate(qId, quality) {
+  let card = state.srs[qId] || { ef: 2.5, interval: 0, reps: 0, due: 0, lastReviewed: 0 };
+
+  if (quality < 3) {
+    // Failed — reset reps but keep history
+    card.reps = 0;
+    card.interval = 0;
+    // due in 10 minutes
+    card.due = Date.now() + 10 * MS_PER_MIN;
+  } else {
+    card.reps += 1;
+    if (card.reps === 1) {
+      card.interval = 1;
+    } else if (card.reps === 2) {
+      card.interval = 3;
+    } else {
+      card.interval = Math.max(1, Math.round(card.interval * card.ef));
+    }
+    // Update EF (ease factor)
+    card.ef = Math.max(1.3, card.ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+    card.due = Date.now() + card.interval * MS_PER_DAY;
+  }
+  card.lastReviewed = Date.now();
+  state.srs[qId] = card;
+  saveState();
+}
+
+function dueQuestions() {
+  // Return all questions due now or overdue, sorted by due date ascending
+  const now = Date.now();
+  const dueIds = Object.entries(state.srs)
+    .filter(([qId, c]) => c.due <= now)
+    .sort((a, b) => a[1].due - b[1].due)
+    .map(([qId]) => parseInt(qId));
+  return dueIds;
+}
+function allTrackedSrs() {
+  return Object.entries(state.srs).sort((a, b) => a[1].due - b[1].due);
+}
+
+// =====================================================================
+// GLOSSARY — annotation builder (v2: tiered highlighting + hints)
+// =====================================================================
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+}
+
+// New glossary shape: terms[key] = { cn, hint, tier (1 or 2), skip_annotate? }
+let GLOSSARY_ORDER = [];
+let GLOSSARY_TERMS = {};
+let COMPARISON_TABLES = [];
+
+// Build a lookup: term lowercase -> table id(s) that reference it
+let TERM_TO_TABLES = {};
+COMPARISON_TABLES.forEach(t => {
+  (t.related_terms || []).forEach(rt => {
+    const k = rt.toLowerCase();
+    if (!TERM_TO_TABLES[k]) TERM_TO_TABLES[k] = [];
+    TERM_TO_TABLES[k].push(t.id);
+  });
+});
+
+// Skip-annotation set (still in glossary, but not highlighted in body text)
+let ANNOTATION_SKIP = new Set();
+
+let GLOSSARY_REGEX = null; // rebuilt by __initRuntimeAfterDataLoaded
+
+// Vocab dictionary — same structure but flat (term -> Chinese)
+let VOCAB_TERMS = {};
+let VOCAB_ORDER = [];
+let VOCAB_REGEX = null; // rebuilt by __initRuntimeAfterDataLoaded
+
+// Issue patterns
+let ISSUE_PATTERNS = [];
+
+// Step 1: legal-term annotation (yellow Tier-1, dashed Tier-2)
+function annotate(text, seen) {
+  return text.replace(GLOSSARY_REGEX, (match, pre, term) => {
+    const key = GLOSSARY_ORDER.find(k => k.toLowerCase() === term.toLowerCase());
+    if (!key) return match;
+    const seenKey = key.toLowerCase();
+    if (seen.has(seenKey)) return match;
+    seen.add(seenKey);
+
+    const entry = GLOSSARY_TERMS[key];
+    const tier = entry.tier || 2;
+    const cls = tier === 1 ? "term term-t1" : "term term-t2";
+    const tableIds = TERM_TO_TABLES[seenKey] || [];
+    const tableLink = tableIds.length
+      ? `<button class="tooltip-link" data-table-id="${tableIds[0]}">📑 看对比表</button>`
+      : "";
+
+    return pre + `<span class="${cls}" data-term="${escapeHtml(key)}">${escapeHtml(term)}<span class="tooltip">` +
+      `<span class="term-en">${escapeHtml(key)}</span>` +
+      `<span class="term-cn">${escapeHtml(entry.cn)}</span>` +
+      (entry.hint ? `<span class="term-hint">${escapeHtml(entry.hint)}</span>` : "") +
+      tableLink +
+      `</span></span>`;
+  });
+}
+
+// Step 2: vocab annotation (light blue). Only runs on text not already inside a <span>.
+// Annotates each word at most once per render-block.
+function annotateVocab(html, seen) {
+  if (!VOCAB_REGEX) return html;
+  // Walk through HTML, only modify text outside of existing tags.
+  return html.replace(/(<[^>]+>)|([^<]+)/g, (match, tag, plainText) => {
+    if (tag) return tag; // unchanged
+    return plainText.replace(VOCAB_REGEX, (m, pre, term) => {
+      const key = VOCAB_ORDER.find(k => k.toLowerCase() === term.toLowerCase());
+      if (!key) return m;
+      const seenKey = key.toLowerCase();
+      if (seen.has(seenKey)) return m;
+      seen.add(seenKey);
+      const gloss = VOCAB_TERMS[key];
+      return pre + `<span class="vocab">${escapeHtml(term)}<span class="vocab-tip"><span class="vocab-tip-en">${escapeHtml(key)}</span>${escapeHtml(gloss)}</span></span>`;
+    });
+  });
+}
+
+// Step 3 (only for stem): detect and highlight issue-spotter trigger phrases.
+// Runs BEFORE other annotation, so triggers take visual priority.
+function annotateIssueTriggers(text, issueResult) {
+  if (!issueResult || !issueResult.triggers || issueResult.triggers.length === 0) return text;
+  // Build a single regex combining all triggers (already regex source strings)
+  const sources = issueResult.triggers.map(t => "(?:" + t + ")");
+  const re = new RegExp("\\b(" + sources.join("|") + ")\\b", "gi");
+  // Track seen so we wrap each trigger at most once
+  const seen = new Set();
+  return text.replace(re, (match) => {
+    const k = match.toLowerCase();
+    if (seen.has(k)) return match;
+    seen.add(k);
+    return `<span class="issue-trigger">${escapeHtml(match)}</span>`;
+  });
+}
+
+// Detect which issue pattern fires for this question. Returns the best-matching
+// pattern entry plus the actual trigger sources that matched.
+function detectIssue(q) {
+  // Search both stem AND choice texts (choices often name the doctrine being tested)
+  const searchText = q.stem + " " + Object.values(q.choices).join(" ");
+  for (const pat of ISSUE_PATTERNS) {
+    // Subject filter — if the pattern declares subjects and ours isn't included, skip
+    if (pat.subjects && pat.subjects.length && !pat.subjects.includes(q.subject)) continue;
+    const firedTriggers = [];
+    for (const trig of pat.triggers) {
+      let re;
+      try { re = new RegExp("\\b" + trig + "\\b", "i"); }
+      catch (e) { continue; }
+      if (re.test(searchText)) firedTriggers.push(trig);
+    }
+    if (firedTriggers.length > 0) {
+      return {
+        id: pat.id,
+        title: pat.issue_cn,
+        strategy: pat.strategy,
+        triggers: firedTriggers,
+      };
+    }
+  }
+  return null;
+}
+
+// Render preserving paragraph breaks AND bullet-style "• X • Y" sequences as a list.
+// Pipeline: HTML-escape → issue triggers → legal terms → vocab.
+function renderQuestionText(text, options) {
+  options = options || {};
+  const annotateTerms = options.annotateTerms !== false;
+  const annotateVocabFlag = options.annotateVocab !== false;
+  const issueResult = options.issueResult || null;
+  const seenTerms = new Set();
+  const seenVocab = new Set();
+
+  function process(escaped) {
+    let html = escaped;
+    if (issueResult) html = annotateIssueTriggers(html, issueResult);
+    if (annotateTerms) html = annotate(html, seenTerms);
+    if (annotateVocabFlag) html = annotateVocab(html, seenVocab);
+    return html;
+  }
+
+  const paragraphs = text.split(/\n\n+/);
+  return paragraphs.map(p => {
+    if (p.includes(" • ")) {
+      const parts = p.split(/\s•\s/);
+      const intro = parts[0].trim();
+      const items = parts.slice(1).map(s => s.trim()).filter(Boolean);
+      let html = "";
+      if (intro) html += `<p>${process(escapeHtml(intro))}</p>`;
+      if (items.length) {
+        html += `<ul class="ex-list">${items.map(it => `<li>${process(escapeHtml(it))}</li>`).join("")}</ul>`;
+      }
+      return html;
+    }
+    return `<p>${process(escapeHtml(p))}</p>`;
+  }).join("");
+}
+
+// Generate a Chinese "key points" preview from the question stem and explanation
+// using which Tier-1 glossary terms appear. This is a lightweight, deterministic
+// summary that helps students quickly grasp what the question is testing.
+function generateKeyPointsPreview(q) {
+  const seen = new Set();
+  const text = (q.stem + " " + q.explanation + " " + q.objective).toLowerCase();
+  const found = [];
+  for (const key of GLOSSARY_ORDER) {
+    const entry = GLOSSARY_TERMS[key];
+    if (entry.tier !== 1) continue;
+    if (entry.skip_annotate) continue;
+    const kLower = key.toLowerCase();
+    if (seen.has(kLower)) continue;
+    // Look for term in text
+    const idx = text.indexOf(kLower);
+    if (idx !== -1) {
+      seen.add(kLower);
+      found.push({ key, entry, pos: idx });
+    }
+    if (found.length >= 5) break;
+  }
+  // Sort by position to keep narrative order
+  found.sort((a, b) => a.pos - b.pos);
+  return found;
+}
+
+
+// =====================================================================
+// NAVIGATION
+// =====================================================================
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById("screen-" + name).classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// =====================================================================
+// HOME — render subject grid + overall stats
+// =====================================================================
+function renderHome() {
+  // Aggregate stats
+  const answered = Object.values(state.answered);
+  const totalAnswered = answered.length;
+  const totalCorrect = answered.filter(a => a.correct).length;
+  const accuracy = totalAnswered ? Math.round(100 * totalCorrect / totalAnswered) : 0;
+  const due = dueQuestions().length;
+
+  // Home stats
+  const homeStats = document.getElementById("home-stats-grid");
+  homeStats.innerHTML = `
+    <div class="stat-cell"><div class="stat-num">${totalAnswered}</div><div class="stat-label">已练 · Answered</div></div>
+    <div class="stat-cell"><div class="stat-num">${accuracy}<span style="font-size:18px;color:var(--ink-3)">%</span></div><div class="stat-label">正确率 · Accuracy</div></div>
+    <div class="stat-cell"><div class="stat-num">${due}</div><div class="stat-label">待复习 · Due</div></div>
+    <div class="stat-cell"><div class="stat-num">${Math.floor(state.totalTime / 60)}<span style="font-size:18px;color:var(--ink-3)">m</span></div><div class="stat-label">总时长 · Time</div></div>
+  `;
+
+  // Review badge
+  const reviewBadge = document.getElementById("review-badge");
+  if (due > 0) {
+    reviewBadge.style.display = "inline-block";
+    reviewBadge.textContent = `${due} 待复习`;
+  } else {
+    reviewBadge.style.display = "none";
+  }
+  document.getElementById("review-desc").textContent = due > 0
+    ? `${due} 道题到期，基于遗忘曲线`
+    : "暂无到期题目，做错的题会在此积累";
+
+  // Subject grid
+  const grid = document.getElementById("subject-grid");
+  grid.innerHTML = "";
+  Object.entries(SUBJECTS).forEach(([sName, sInfo]) => {
+    const subjQs = QUESTIONS.filter(q => q.subject === sName);
+    const answeredSubj = subjQs.filter(q => state.answered[q.id]);
+    const correctSubj = answeredSubj.filter(q => state.answered[q.id].correct);
+    const acc = answeredSubj.length ? Math.round(100 * correctSubj.length / answeredSubj.length) : 0;
+    const pct = subjQs.length ? Math.round(100 * answeredSubj.length / subjQs.length) : 0;
+
+    const card = document.createElement("button");
+    card.className = "subject-card";
+    card.style.setProperty("--subj-color", sInfo.color);
+    card.innerHTML = `
+      <div class="subj-name-en">${sName}</div>
+      <div class="subj-name-cn">${sInfo.cn} · ${subjQs.length} questions</div>
+      <div class="subj-stats">
+        <span><b>${answeredSubj.length}</b> 已练</span>
+        <span><b>${acc}%</b> 正确率</span>
+      </div>
+      <div class="subj-progress"><div class="subj-progress-fill" style="width:${pct}%"></div></div>
+    `;
+    card.addEventListener("click", () => startQuiz({ subject: sName, count: 10 }));
+    grid.appendChild(card);
+  });
+
+  // Resume button
+  document.getElementById("action-resume").onclick = () => startQuiz({ subject: null, count: 10 });
+  document.getElementById("action-review").onclick = () => {
+    if (due === 0) {
+      toast("还没有到期的错题");
+    } else {
+      startQuiz({ mode: "review" });
+    }
+  };
+}
+
+// =====================================================================
+// QUIZ SESSION
+// =====================================================================
+let session = null; // { queue: [qId], idx, mode, subject, startedAt, results: [{qId, correct, timeSec}] }
+let questionStartedAt = 0;
+let timerInterval = null;
+
+function startQuiz({ subject = null, count = 10, mode = "normal" }) {
+  let queue;
+  if (mode === "review") {
+    queue = dueQuestions();
+    // limit to 20 per review session to not overwhelm
+    queue = queue.slice(0, 20);
+  } else {
+    let pool = subject ? QUESTIONS.filter(q => q.subject === subject) : QUESTIONS.slice();
+    // Shuffle, prefer questions not yet answered, but mix in some
+    const unanswered = pool.filter(q => !state.answered[q.id]);
+    const answered = pool.filter(q => state.answered[q.id]);
+    // Shuffle each
+    const shuffle = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
+    queue = [...shuffle(unanswered), ...shuffle(answered)].slice(0, count).map(q => q.id);
+  }
+
+  if (queue.length === 0) {
+    toast("没有可用题目");
+    return;
+  }
+
+  session = {
+    queue, idx: 0, mode, subject,
+    startedAt: Date.now(),
+    results: [],
+  };
+  showScreen("quiz");
+  renderCurrentQuestion();
+}
+
+function currentQ() {
+  return QUESTIONS.find(q => q.id === session.queue[session.idx]);
+}
+
+// Detected issue for current question (cached so we can use in multiple places)
+let currentIssue = null;
+
+function renderCurrentQuestion() {
+  const q = currentQ();
+  const sInfo = SUBJECTS[q.subject];
+
+  // Subject tag + theme
+  const root = document.documentElement;
+  root.style.setProperty("--subj-color", sInfo.color);
+  root.style.setProperty("--subj-tint", sInfo.tint);
+  const tag = document.getElementById("quiz-subj-tag");
+  tag.textContent = sInfo.short + " · " + sInfo.cn;
+  tag.style.setProperty("--subj-color", sInfo.color);
+  tag.style.setProperty("--subj-tint", sInfo.tint);
+
+  // Progress
+  document.getElementById("quiz-progress-text").textContent = `${session.idx + 1} / ${session.queue.length}`;
+  document.getElementById("quiz-progress-fill").style.width = `${(session.idx) / session.queue.length * 100}%`;
+
+  // Detect issue spotter
+  currentIssue = detectIssue(q);
+
+  // Render issue card
+  renderIssueSpot(currentIssue);
+
+  // Key points (Chinese vocabulary preview)
+  renderKeyHints(q);
+
+  // Stem (with issue-trigger highlighting if applicable)
+  const stem = document.getElementById("question-stem");
+  stem.classList.remove("zh");
+  stem.dataset.qid = q.id;
+  stem.dataset.lang = "en";
+  stem.dataset.cachedZh = ""; // filled lazily on translate
+  stem.dataset.cachedZhChoices = "";
+  stem.innerHTML = renderQuestionText(q.stem, { issueResult: currentIssue });
+
+  const choicesDiv = document.getElementById("choices");
+  choicesDiv.innerHTML = "";
+  ["A", "B", "C", "D"].forEach(letter => {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.dataset.letter = letter;
+    btn.innerHTML = `
+      <span class="choice-letter">${letter}</span>
+      <span class="choice-text">${escapeHtml(q.choices[letter])}</span>
+    `;
+    btn.addEventListener("click", () => selectChoice(letter));
+    choicesDiv.appendChild(btn);
+  });
+
+  // Reset feedback / explanation / SRS quality / new explanation components
+  document.getElementById("feedback").className = "feedback";
+  document.getElementById("explanation-wrap").style.display = "none";
+  document.getElementById("srs-quality").classList.remove("show");
+  document.getElementById("btn-next").disabled = true;
+  const expSummary = document.getElementById("exp-summary");
+  expSummary.innerHTML = "";
+  expSummary.style.display = "none";
+  document.getElementById("expl-sections").innerHTML = "";
+  document.getElementById("expl-extend-wrap").innerHTML = "";
+  document.getElementById("ai-result-container").innerHTML = "";
+
+  // Lang switch reset
+  document.querySelectorAll("#lang-switch button").forEach(b => b.classList.toggle("active", b.dataset.lang === "en"));
+
+  // Timer
+  questionStartedAt = Date.now();
+  startTimer();
+
+  // Reset translation button
+  const trBtn = document.getElementById("translate-btn");
+  trBtn.textContent = "🌐 中文翻译";
+  trBtn.disabled = false;
+}
+
+function renderIssueSpot(issue) {
+  const card = document.getElementById("issue-spot");
+  if (!issue) {
+    card.style.display = "none";
+    return;
+  }
+  card.style.display = "block";
+  card.innerHTML = `
+    <div class="issue-spot-label">🎯 题眼 · Issue Spot</div>
+    <div class="issue-spot-title">${escapeHtml(issue.title)}</div>
+    <div class="issue-spot-strategy">${escapeHtml(issue.strategy)}</div>
+  `;
+}
+
+function renderKeyHints(q) {
+  const hints = generateKeyPointsPreview(q);
+  const container = document.getElementById("key-hints");
+  if (hints.length === 0) {
+    container.style.display = "none";
+    return;
+  }
+  container.style.display = "flex";
+  const items = hints.map(({ key, entry }) => {
+    return `<div class="key-hint-item">
+      <span class="key-hint-en">${escapeHtml(key)}</span>
+      <span class="key-hint-cn">${escapeHtml(entry.cn)}${entry.hint ? "：" + escapeHtml(entry.hint) : ""}</span>
+    </div>`;
+  }).join("");
+  container.innerHTML = `<div class="key-hints-label">📚 本题考点 · Key Concepts</div><div class="key-hints-list">${items}</div>`;
+}
+
+function startTimer() {
+  const display = document.getElementById("timer-display");
+  const timer = document.getElementById("quiz-timer");
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - questionStartedAt) / 1000);
+    const m = Math.floor(elapsed / 60).toString().padStart(2, "0");
+    const s = (elapsed % 60).toString().padStart(2, "0");
+    display.textContent = `${m}:${s}`;
+    if (elapsed >= 90) timer.classList.add("warn");
+  }, 200);
+}
+function stopTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+}
+
+function selectChoice(letter) {
+  if (document.querySelector(".choice.locked")) return; // already answered
+
+  const q = currentQ();
+  const correct = letter === q.answer;
+  const elapsed = Math.floor((Date.now() - questionStartedAt) / 1000);
+  stopTimer();
+
+  // Lock and mark choices
+  document.querySelectorAll(".choice").forEach(c => {
+    c.classList.add("locked");
+    const l = c.dataset.letter;
+    if (l === q.answer) c.classList.add("correct");
+    else if (l === letter) c.classList.add("wrong");
+    else c.classList.add("dim");
+  });
+
+  // Record answer
+  state.answered[q.id] = {
+    ts: Date.now(),
+    correct,
+    choice: letter,
+    timeSec: elapsed,
+    subject: q.subject,
+  };
+  state.totalTime += elapsed;
+  if (!correct) {
+    // Add to SRS if not already
+    if (!state.srs[q.id]) {
+      state.srs[q.id] = { ef: 2.5, interval: 0, reps: 0, due: Date.now(), lastReviewed: 0 };
+    }
+  }
+  saveState();
+
+  // Track session result
+  session.results.push({ qId: q.id, correct, timeSec: elapsed });
+
+  // Feedback
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback show " + (correct ? "correct" : "wrong");
+  document.getElementById("feedback-head").textContent = correct
+    ? "✓ 答对了 · Correct"
+    : `✗ 答错了 · Incorrect (正确答案: ${q.answer})`;
+  document.getElementById("feedback-sub").textContent = correct
+    ? `用时 ${elapsed} 秒`
+    : `你选了 ${letter}，正确答案是 ${q.answer}。已加入错题库`;
+
+  // Explanation
+  const explWrap = document.getElementById("explanation-wrap");
+  explWrap.style.display = "block";
+
+  // Render structured explanation (4 sections)
+  renderStructuredExplanation(q, correct, letter);
+
+  // Render objective (the one-line takeaway from UWorld)
+  document.getElementById("objective-text").innerHTML = renderQuestionText(q.objective, {annotateTerms: true, annotateVocab: true});
+  document.getElementById("objective-text").classList.remove("zh");
+
+  // Render the explanation summary (Chinese one-line takeaway)
+  renderExpSummary(q, correct, letter);
+
+  // Render extended learning (related concepts + tables + suggested next steps)
+  renderExtendedLearning(q);
+
+  // SRS quality buttons — show for tracked SRS cards (i.e. previously wrong, or this turn wrong)
+  if (state.srs[q.id]) {
+    document.getElementById("srs-quality").classList.add("show");
+  }
+
+  // Enable next
+  document.getElementById("btn-next").disabled = false;
+}
+
+// Render a one-line Chinese summary of the explanation, mentioning the correct
+// answer and the key tier-1 concept that decides the question.
+function renderExpSummary(q, correct, chosen) {
+  const summary = document.getElementById("exp-summary");
+  const hints = generateKeyPointsPreview(q);
+  const verdict = correct
+    ? `<span style="color:var(--correct);font-weight:600">✓ 答对了</span>`
+    : `<span style="color:var(--wrong);font-weight:600">✗ 你选了 ${chosen}，正确答案是 ${q.answer}</span>`;
+
+  let conceptLine = "";
+  if (hints.length > 0) {
+    const top = hints.slice(0, 2);
+    const tagged = top.map(h => `<span class="exp-summary-tag">${escapeHtml(h.entry.cn)}</span>`).join("、");
+    conceptLine = `核心考察 ${tagged}`;
+    const firstHint = top[0].entry.hint;
+    if (firstHint) {
+      conceptLine += `。关键记忆：<em style="color:var(--ink-2)">${escapeHtml(firstHint)}</em>`;
+    }
+  }
+
+  summary.style.display = "block";
+  summary.innerHTML = `<div class="exp-summary-content">${verdict}　${conceptLine}</div>`;
+}
+
+// =====================================================================
+// Structured explanation rendering — break UWorld text into 4 sections
+// =====================================================================
+function renderStructuredExplanation(q, correct, chosen) {
+  const container = document.getElementById("expl-sections");
+  const s = q.expl_structured || {};
+  const seenTerms = new Set();
+  const seenVocab = new Set();
+
+  // Helper to process small chunks with annotation
+  function fmt(text) {
+    if (!text) return "";
+    return renderQuestionText(text, { issueResult: null });
+  }
+
+  let html = "";
+
+  // 📖 Core Rule
+  if (s.core_rule) {
+    html += `<div class="expl-section expl-rule">
+      <div class="expl-section-head"><span class="expl-section-emoji">📖</span><span>核心规则 · Core Rule</span></div>
+      <div class="expl-section-body">${fmt(s.core_rule)}</div>
+    </div>`;
+  }
+
+  // 🔍 Analysis
+  if (s.analysis) {
+    html += `<div class="expl-section expl-analysis">
+      <div class="expl-section-head"><span class="expl-section-emoji">🔍</span><span>本题套用 · Apply to Facts</span></div>
+      <div class="expl-section-body">${fmt(s.analysis)}</div>
+    </div>`;
+  }
+
+  // ✓/✗ Per-choice
+  // Build mini cards for each choice. Correct answer card gets a ✓ + the analysis
+  // text combining the rule conclusion; wrong choices get ✗ + their parenthetical.
+  const choiceAnalyses = s.choices || {};
+  // Construct the correct-answer card. If no explicit analysis for it (UWorld
+  // typically only writes parentheticals for WRONG choices), synthesize one.
+  let correctAnswerText = choiceAnalyses[q.answer];
+  if (!correctAnswerText && s.analysis) {
+    // Take the last sentence of the analysis as the "why correct" gist
+    const sentences = s.analysis.match(/[^.!?]+[.!?]+/g);
+    if (sentences && sentences.length > 0) {
+      correctAnswerText = sentences[sentences.length - 1].trim();
+    }
+  }
+  if (!correctAnswerText) correctAnswerText = "正确答案。详见上方核心规则与本题套用。";
+
+  html += `<div class="expl-section-divider">
+    <span class="expl-section-emoji">✅</span><span>选项剖析 · Choice Analysis</span>
+  </div>`;
+  html += `<div class="expl-choices">`;
+  ["A", "B", "C", "D"].forEach(letter => {
+    const isCorrect = letter === q.answer;
+    const cls = isCorrect ? "correct" : "wrong";
+    const icon = isCorrect ? "✓" : "✗";
+    let body;
+    if (isCorrect) {
+      body = `<strong>${escapeHtml(q.choices[letter])}</strong><br><span style="font-size:13px;color:var(--ink-2)">${fmt(correctAnswerText)}</span>`;
+    } else {
+      const choiceText = escapeHtml(q.choices[letter]);
+      const wrongWhy = choiceAnalyses[letter] || "（解析未单列此选项；通常因不符合上方核心规则的要件）";
+      body = `<span style="color:var(--ink-3);text-decoration:line-through 1px;text-decoration-color:rgba(0,0,0,0.2)">${choiceText}</span><br><span style="font-size:13px;color:var(--ink-2)">${fmt(wrongWhy)}</span>`;
+    }
+    html += `<div class="expl-choice ${cls}">
+      <span class="expl-choice-letter">${letter}</span>
+      <span class="expl-choice-icon">${icon}</span>
+      <span class="expl-choice-text">${body}</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // 💡 Tip — derive from the issue spotter if available
+  const tip = currentIssue && currentIssue.strategy;
+  if (tip) {
+    html += `<div class="expl-section expl-tip">
+      <div class="expl-section-head"><span class="expl-section-emoji">💡</span><span>锦囊妙计 · Strategy</span></div>
+      <div class="expl-tip-list">
+        <div class="expl-tip-item">${escapeHtml(tip)}</div>
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+// =====================================================================
+// Extended learning — chips for related tables + related terms + next-topic suggestions
+// =====================================================================
+function renderExtendedLearning(q) {
+  const container = document.getElementById("expl-extend-wrap");
+  const allText = (q.stem + " " + q.explanation + " " + q.objective).toLowerCase();
+
+  // Find related comparison tables
+  const tableIds = new Set();
+  for (const [term, tids] of Object.entries(TERM_TO_TABLES)) {
+    if (allText.includes(term)) tids.forEach(id => tableIds.add(id));
+  }
+
+  // Find tier-1 terms mentioned (for "related concepts" row)
+  const relatedTerms = [];
+  for (const key of GLOSSARY_ORDER) {
+    const entry = GLOSSARY_TERMS[key];
+    if (entry.tier !== 1 || entry.skip_annotate) continue;
+    if (allText.includes(key.toLowerCase())) {
+      relatedTerms.push({ key, entry });
+      if (relatedTerms.length >= 6) break;
+    }
+  }
+
+  if (tableIds.size === 0 && relatedTerms.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = `<div class="expl-section expl-extend">
+    <div class="expl-section-head"><span class="expl-section-emoji">📚</span><span>延伸学习 · Connect & Extend</span></div>
+  `;
+
+  if (tableIds.size > 0) {
+    const chips = [...tableIds].map(id => {
+      const t = COMPARISON_TABLES.find(c => c.id === id);
+      if (!t) return "";
+      return `<button class="extend-chip table" data-table-id="${id}">${escapeHtml(t.title)}</button>`;
+    }).join("");
+    html += `<div class="extend-row">
+      <div class="extend-row-label">对比记忆 · Comparison Tables</div>
+      ${chips}
+    </div>`;
+  }
+
+  if (relatedTerms.length > 0) {
+    const chips = relatedTerms.map(({ key, entry }) =>
+      `<button class="extend-chip term" data-term="${escapeHtml(key)}">${escapeHtml(key)}<span class="extend-chip-cn">${escapeHtml(entry.cn)}</span></button>`
+    ).join("");
+    html += `<div class="extend-row">
+      <div class="extend-row-label">相关概念 · Related Concepts</div>
+      ${chips}
+    </div>`;
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function nextQuestion() {
+  if (session.idx + 1 >= session.queue.length) {
+    completeQuiz();
+  } else {
+    session.idx += 1;
+    renderCurrentQuestion();
+  }
+}
+
+function completeQuiz() {
+  stopTimer();
+  state.sessions += 1;
+  saveState();
+
+  const correct = session.results.filter(r => r.correct).length;
+  const total = session.results.length;
+  const totalTime = session.results.reduce((s, r) => s + r.timeSec, 0);
+
+  document.getElementById("c-correct").textContent = correct;
+  document.getElementById("c-total").textContent = total;
+  const mins = Math.floor(totalTime / 60);
+  const secs = (totalTime % 60).toString().padStart(2, "0");
+  document.getElementById("c-time").textContent = `${mins}:${secs}`;
+
+  // Emoji + title based on performance
+  const rate = total ? correct / total : 0;
+  let emoji = "✨", title = "一组结束", sub = "";
+  if (rate === 1)      { emoji = "🏆"; title = "全胜！"; sub = "完美的一轮，继续保持"; }
+  else if (rate >= 0.8){ emoji = "🎯"; title = "做得很棒"; sub = "再来一组巩固一下"; }
+  else if (rate >= 0.6){ emoji = "👍"; title = "稳步前进"; sub = "错题已加入复习队列"; }
+  else if (rate >= 0.4){ emoji = "📚"; title = "需要加把劲"; sub = "看看解析，下次更好"; }
+  else                 { emoji = "🌱"; title = "新手村出来了"; sub = "错题已收入囊中，慢慢消化"; }
+
+  document.getElementById("complete-emoji").textContent = emoji;
+  document.getElementById("complete-title").textContent = title;
+  document.getElementById("complete-sub").textContent = sub;
+
+  showScreen("complete");
+}
+
+// =====================================================================
+// STATS SCREEN
+// =====================================================================
+function renderStats() {
+  const answered = Object.values(state.answered);
+  const totalAnswered = answered.length;
+  const totalCorrect = answered.filter(a => a.correct).length;
+  const accuracy = totalAnswered ? Math.round(100 * totalCorrect / totalAnswered) : 0;
+  const avgTime = totalAnswered ? Math.round(answered.reduce((s, a) => s + a.timeSec, 0) / totalAnswered) : 0;
+
+  document.getElementById("overall-stats").innerHTML = `
+    <div class="stat-tile"><div class="stat-tile-num">${totalAnswered}</div><div class="stat-tile-label">总答题数 · Answered</div></div>
+    <div class="stat-tile"><div class="stat-tile-num">${accuracy}<span style="font-size:18px;color:var(--ink-3)">%</span></div><div class="stat-tile-label">总正确率 · Accuracy</div></div>
+    <div class="stat-tile"><div class="stat-tile-num">${state.sessions}</div><div class="stat-tile-label">练习场次 · Sessions</div></div>
+    <div class="stat-tile"><div class="stat-tile-num">${avgTime}<span style="font-size:18px;color:var(--ink-3)">s</span></div><div class="stat-tile-label">单题平均用时</div></div>
+  `;
+
+  // By subject
+  const table = document.getElementById("subj-stats-table");
+  let rows = `<div class="subj-stats-row header"><div>科目 Subject</div><div>已练</div><div>正确</div><div>正确率</div></div>`;
+  Object.entries(SUBJECTS).forEach(([sName, sInfo]) => {
+    const subjAnswers = answered.filter(a => a.subject === sName);
+    const subjCorrect = subjAnswers.filter(a => a.correct).length;
+    const acc = subjAnswers.length ? Math.round(100 * subjCorrect / subjAnswers.length) : 0;
+    rows += `
+      <div class="subj-stats-row">
+        <div class="subj-stats-name" style="color:${sInfo.color}">${sName}<br><span style="font-size:11px;color:var(--ink-3);font-weight:400">${sInfo.cn}</span></div>
+        <div>${subjAnswers.length}</div>
+        <div>${subjCorrect}</div>
+        <div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="subj-stats-bar" style="flex:1"><div class="subj-stats-bar-fill" style="width:${acc}%;background:${sInfo.color}"></div></div>
+            <span style="font-size:12px;font-weight:600;color:${sInfo.color};min-width:34px;text-align:right">${acc}%</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  table.innerHTML = rows;
+
+  // Wrong bag
+  const wrongList = document.getElementById("wrong-bag-list");
+  const all = allTrackedSrs();
+  if (all.length === 0) {
+    wrongList.innerHTML = `<div class="review-empty">
+      <div class="review-empty-icon">📭</div>
+      <div class="review-empty-title">错题库为空</div>
+      <div style="font-size:13px">做错的题会自动收集到这里，按遗忘曲线提醒复习</div>
+    </div>`;
+    return;
+  }
+
+  const now = Date.now();
+  const overdueCount = all.filter(([id, c]) => c.due <= now).length;
+  let html = `<div style="font-size:13px;color:var(--ink-3);margin-bottom:14px">
+    共 <b style="color:var(--ink)">${all.length}</b> 道错题，<b style="color:var(--wrong)">${overdueCount}</b> 道到期待复习
+    ${overdueCount > 0 ? `<button class="btn primary" style="margin-left:14px" id="btn-start-review">开始复习 →</button>` : ""}
+  </div>`;
+
+  // List
+  all.slice(0, 30).forEach(([qIdStr, card]) => {
+    const qId = parseInt(qIdStr);
+    const q = QUESTIONS.find(qq => qq.id === qId);
+    if (!q) return;
+    const sInfo = SUBJECTS[q.subject];
+    const dueDelta = card.due - now;
+    let dueLabel, dueClass = "";
+    if (dueDelta <= 0) {
+      dueLabel = "到期";
+      dueClass = "overdue";
+    } else if (dueDelta < MS_PER_DAY) {
+      dueLabel = "今日";
+      dueClass = "today";
+    } else {
+      const days = Math.ceil(dueDelta / MS_PER_DAY);
+      dueLabel = `${days}天后`;
+    }
+    html += `
+      <div class="srs-card" data-qid="${qId}">
+        <div style="flex:1;min-width:0">
+          <span class="subj-tag" style="--subj-color:${sInfo.color};--subj-tint:${sInfo.tint};margin-bottom:6px">${sInfo.short}</span>
+          <div class="srs-card-title">${escapeHtml(q.stem.slice(0, 140))}…</div>
+          <div class="srs-card-meta">复习次数 ${card.reps} · 间隔 ${card.interval}天 · EF ${card.ef.toFixed(2)}</div>
+        </div>
+        <div class="srs-card-due ${dueClass}">${dueLabel}</div>
+      </div>
+    `;
+  });
+  wrongList.innerHTML = html;
+
+  // Bind start review
+  const btnStartRev = document.getElementById("btn-start-review");
+  if (btnStartRev) btnStartRev.addEventListener("click", () => startQuiz({ mode: "review" }));
+
+  // Bind individual review
+  wrongList.querySelectorAll(".srs-card").forEach(c => {
+    c.addEventListener("click", () => {
+      const qId = parseInt(c.dataset.qid);
+      session = { queue: [qId], idx: 0, mode: "review", subject: null, startedAt: Date.now(), results: [] };
+      showScreen("quiz");
+      renderCurrentQuestion();
+    });
+  });
+}
+
+// =====================================================================
+// Translation — Google Translate (free public endpoint, no key needed)
+// =====================================================================
+
+// Google Translate public endpoint. Free, browser-CORS-allowed.
+async function googleTranslate(text, targetLang = "zh-CN", sourceLang = "en") {
+  // Google has a length limit per request (~5000 chars). Chunk if needed.
+  const MAX_CHUNK = 4500;
+  if (text.length <= MAX_CHUNK) {
+    return await translateChunk(text, targetLang, sourceLang);
+  }
+  // Chunk by paragraph boundaries
+  const paras = text.split(/(\n\n+)/);
+  let buffer = "";
+  let result = "";
+  for (const part of paras) {
+    if ((buffer + part).length > MAX_CHUNK && buffer) {
+      result += await translateChunk(buffer, targetLang, sourceLang);
+      buffer = part;
+    } else {
+      buffer += part;
+    }
+  }
+  if (buffer) result += await translateChunk(buffer, targetLang, sourceLang);
+  return result;
+}
+
+async function translateChunk(text, tl, sl) {
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error("HTTP " + resp.status);
+  const data = await resp.json();
+  // Response shape: [[ [translated, original, null, null, score], ... ], ...]
+  if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error("Bad response shape");
+  return data[0].map(seg => (seg && seg[0]) || "").join("");
+}
+
+async function translateCurrentQuestion(targetLang) {
+  const q = currentQ();
+  const stem = document.getElementById("question-stem");
+
+  if (targetLang === "en") {
+    stem.dataset.lang = "en";
+    stem.classList.remove("zh");
+    stem.innerHTML = renderQuestionText(q.stem, { issueResult: currentIssue });
+    document.querySelectorAll(".choice").forEach(b => {
+      const letter = b.dataset.letter;
+      b.querySelector(".choice-text").textContent = q.choices[letter];
+    });
+    return;
+  }
+
+  // Chinese
+  if (stem.dataset.cachedZh) {
+    stem.dataset.lang = "zh";
+    stem.classList.add("zh");
+    stem.innerHTML = stem.dataset.cachedZh;
+    const cachedChoices = JSON.parse(stem.dataset.cachedZhChoices || "{}");
+    document.querySelectorAll(".choice").forEach(b => {
+      const letter = b.dataset.letter;
+      b.querySelector(".choice-text").textContent = cachedChoices[letter] || q.choices[letter];
+    });
+    return;
+  }
+
+  stem.innerHTML = `<p><span class="loading">翻译中… via Google Translate</span></p>`;
+  document.querySelectorAll(".choice").forEach(b => {
+    b.querySelector(".choice-text").innerHTML = `<span class="loading">…</span>`;
+  });
+
+  try {
+    // Translate stem and choices in parallel
+    const choiceLetters = ["A", "B", "C", "D"];
+    const [stemZh, ...choicesZh] = await Promise.all([
+      googleTranslate(q.stem),
+      ...choiceLetters.map(l => googleTranslate(q.choices[l])),
+    ]);
+
+    const choicesMap = {};
+    choiceLetters.forEach((l, i) => { choicesMap[l] = choicesZh[i]; });
+
+    stem.dataset.cachedZh = renderQuestionText(stemZh, {annotateTerms: false, annotateVocab: false});
+    stem.dataset.cachedZhChoices = JSON.stringify(choicesMap);
+    stem.dataset.lang = "zh";
+    stem.classList.add("zh");
+    stem.innerHTML = stem.dataset.cachedZh;
+    document.querySelectorAll(".choice").forEach(b => {
+      const letter = b.dataset.letter;
+      b.querySelector(".choice-text").textContent = choicesMap[letter];
+    });
+  } catch (e) {
+    console.error("Translation failed", e);
+    stem.innerHTML = renderQuestionText(q.stem, { issueResult: currentIssue });
+    document.querySelectorAll(".choice").forEach(b => {
+      const letter = b.dataset.letter;
+      b.querySelector(".choice-text").textContent = q.choices[letter];
+    });
+    toast("翻译失败：" + (e.message || "无法连接 Google 翻译"));
+    document.querySelectorAll("#lang-switch button").forEach(b => b.classList.toggle("active", b.dataset.lang === "en"));
+  }
+}
+
+async function translateExplanation() {
+  const q = currentQ();
+  const btn = document.getElementById("translate-btn");
+  const expWrap = document.getElementById("explanation-wrap");
+
+  // Toggle off — return to English
+  if (expWrap.dataset.lang === "zh") {
+    expWrap.dataset.lang = "en";
+    // Re-render structured explanation from original
+    const correctChoice = q.answer;
+    const lastSelected = state.answered[q.id] ? state.answered[q.id].choice : null;
+    renderStructuredExplanation(q, lastSelected === q.answer, lastSelected || q.answer);
+    document.getElementById("objective-text").innerHTML = renderQuestionText(q.objective, {annotateTerms: true, annotateVocab: true});
+    document.getElementById("objective-text").classList.remove("zh");
+    btn.textContent = "🌐 中文翻译";
+    return;
+  }
+
+  // If we have cached translation, just apply
+  if (expWrap.dataset.cachedZh) {
+    expWrap.dataset.lang = "zh";
+    document.getElementById("expl-sections").innerHTML = expWrap.dataset.cachedZh;
+    document.getElementById("objective-text").innerHTML = expWrap.dataset.cachedZhObj || "";
+    document.getElementById("objective-text").classList.add("zh");
+    btn.textContent = "↩ 显示原文";
+    return;
+  }
+
+  // Need to translate
+  btn.disabled = true;
+  btn.innerHTML = `<span class="loading">翻译中…</span>`;
+  try {
+    const s = q.expl_structured || {};
+    // Collect all texts to translate
+    const choiceLetters = Object.keys(s.choices || {});
+
+    const texts = [
+      s.core_rule || "",
+      s.analysis || "",
+      ...choiceLetters.map(l => s.choices[l]),
+      q.objective || "",
+    ];
+
+    // Filter out empty entries but remember positions
+    const nonEmptyIdx = [];
+    const toTranslate = [];
+    texts.forEach((t, i) => {
+      if (t && t.trim()) {
+        nonEmptyIdx.push(i);
+        toTranslate.push(t);
+      }
+    });
+
+    const translatedResults = await Promise.all(toTranslate.map(t => googleTranslate(t)));
+    const translated = new Array(texts.length).fill("");
+    nonEmptyIdx.forEach((origIdx, i) => { translated[origIdx] = translatedResults[i]; });
+
+    const zhStructured = {
+      core_rule: translated[0],
+      analysis: translated[1],
+      choices: {},
+    };
+    choiceLetters.forEach((l, i) => {
+      zhStructured.choices[l] = translated[2 + i];
+    });
+    const objZh = translated[translated.length - 1];
+
+    // Render Chinese version (still uses our structured renderer but with zh data)
+    renderStructuredExplanationFromData(q, zhStructured, /*zh*/ true);
+    const objEl = document.getElementById("objective-text");
+    objEl.innerHTML = objZh ? renderQuestionText(objZh, {annotateTerms: false, annotateVocab: false}) : "";
+    objEl.classList.add("zh");
+
+    // Cache so toggling is instant
+    expWrap.dataset.cachedZh = document.getElementById("expl-sections").innerHTML;
+    expWrap.dataset.cachedZhObj = objEl.innerHTML;
+    expWrap.dataset.lang = "zh";
+    btn.textContent = "↩ 显示原文";
+  } catch (e) {
+    console.error(e);
+    toast("翻译失败：" + (e.message || "无法连接 Google 翻译"));
+    btn.textContent = "🌐 中文翻译";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Same as renderStructuredExplanation but using provided data (English or Chinese)
+function renderStructuredExplanationFromData(q, s, isZh) {
+  const container = document.getElementById("expl-sections");
+  const seenTerms = new Set();
+  const seenVocab = new Set();
+
+  function fmt(text) {
+    if (!text) return "";
+    // For Chinese rendering, don't annotate (terms are English-only)
+    if (isZh) return renderQuestionText(text, { annotateTerms: false, annotateVocab: false });
+    return renderQuestionText(text, { issueResult: null });
+  }
+  const zhCls = isZh ? " zh" : "";
+
+  let html = "";
+  if (s.core_rule) {
+    html += `<div class="expl-section expl-rule">
+      <div class="expl-section-head"><span class="expl-section-emoji">📖</span><span>核心规则 · Core Rule</span></div>
+      <div class="expl-section-body${zhCls}">${fmt(s.core_rule)}</div>
+    </div>`;
+  }
+  if (s.analysis) {
+    html += `<div class="expl-section expl-analysis">
+      <div class="expl-section-head"><span class="expl-section-emoji">🔍</span><span>本题套用 · Apply to Facts</span></div>
+      <div class="expl-section-body${zhCls}">${fmt(s.analysis)}</div>
+    </div>`;
+  }
+
+  const choiceAnalyses = s.choices || {};
+  let correctAnswerText = choiceAnalyses[q.answer];
+  if (!correctAnswerText && s.analysis) {
+    const sentences = s.analysis.match(/[^.!?。！？]+[.!?。！？]+/g);
+    if (sentences && sentences.length > 0) correctAnswerText = sentences[sentences.length - 1].trim();
+  }
+  if (!correctAnswerText) correctAnswerText = isZh ? "正确答案。详见上方核心规则与本题套用。" : "正确答案。详见上方核心规则与本题套用。";
+
+  html += `<div class="expl-section-divider">
+    <span class="expl-section-emoji">✅</span><span>选项剖析 · Choice Analysis</span>
+  </div>`;
+  html += `<div class="expl-choices">`;
+  ["A", "B", "C", "D"].forEach(letter => {
+    const isCorrect = letter === q.answer;
+    const cls = isCorrect ? "correct" : "wrong";
+    const icon = isCorrect ? "✓" : "✗";
+    let body;
+    if (isCorrect) {
+      body = `<strong>${escapeHtml(q.choices[letter])}</strong><br><span style="font-size:13px;color:var(--ink-2)">${fmt(correctAnswerText)}</span>`;
+    } else {
+      const choiceText = escapeHtml(q.choices[letter]);
+      const wrongWhy = choiceAnalyses[letter] || "（解析未单列此选项；通常因不符合上方核心规则的要件）";
+      body = `<span style="color:var(--ink-3);text-decoration:line-through 1px;text-decoration-color:rgba(0,0,0,0.2)">${choiceText}</span><br><span style="font-size:13px;color:var(--ink-2)">${fmt(wrongWhy)}</span>`;
+    }
+    html += `<div class="expl-choice ${cls}">
+      <span class="expl-choice-letter">${letter}</span>
+      <span class="expl-choice-icon">${icon}</span>
+      <span class="expl-choice-text">${body}</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  const tip = currentIssue && currentIssue.strategy;
+  if (tip) {
+    html += `<div class="expl-section expl-tip">
+      <div class="expl-section-head"><span class="expl-section-emoji">💡</span><span>锦囊妙计 · Strategy</span></div>
+      <div class="expl-tip-list">
+        <div class="expl-tip-item">${escapeHtml(tip)}</div>
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+// "Open in Google Translate" — copies the text and opens translate.google.com
+// in a new tab. Useful when the inline translation hits a rate limit, or when
+// the user wants Google's full UI (alternatives, examples, audio).
+async function openInGoogleTranslate(text) {
+  const target = "https://translate.google.com/?sl=en&tl=zh-CN&op=translate&text=" + encodeURIComponent(text.slice(0, 1500));
+  // Also copy text to clipboard for easy paste if URL gets truncated
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    }
+  } catch {}
+  window.open(target, "_blank", "noopener");
+}
+
+
+// =====================================================================
+// AI REWRITE — DeepSeek / OpenRouter free models for richer explanations
+// =====================================================================
+
+const AI_PROVIDERS = {
+  deepseek: {
+    name: "DeepSeek",
+    endpoint: "https://api.deepseek.com/v1/chat/completions",
+    defaultModel: "deepseek-chat",
+    hint: "在 <a href=\"https://platform.deepseek.com/api_keys\" target=\"_blank\">platform.deepseek.com/api_keys</a> 创建 key。新账号通常送 ¥5 试用额度，足够刷几百道题。",
+  },
+  openrouter: {
+    name: "OpenRouter",
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    defaultModel: "deepseek/deepseek-chat-v3.1:free",
+    hint: "在 <a href=\"https://openrouter.ai/keys\" target=\"_blank\">openrouter.ai/keys</a> 创建 key。<br>常用免费模型: <code>deepseek/deepseek-chat-v3.1:free</code>, <code>meta-llama/llama-3.3-70b-instruct:free</code>, <code>google/gemini-2.0-flash-exp:free</code>",
+  },
+};
+
+const AI_STORAGE_KEY = "mbe-ai-config";
+
+function loadAIConfig() {
+  try {
+    const raw = localStorage.getItem(AI_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) { return null; }
+}
+function saveAIConfig(cfg) {
+  localStorage.setItem(AI_STORAGE_KEY, JSON.stringify(cfg));
+}
+
+function aiBuildPrompt(q, lastChoice) {
+  const wasCorrect = lastChoice === q.answer;
+  const choices = ["A", "B", "C", "D"].map(l => `${l}. ${q.choices[l]}`).join("\n");
+  return `你是一位资深美国律考(MBE)辅导老师，给中国学生讲解。
+
+【题干】
+${q.stem}
+
+【选项】
+${choices}
+
+【正确答案】${q.answer}
+【学生选的】${lastChoice}${wasCorrect ? "（答对了）" : "（答错了）"}
+
+【UWorld 原版解析（供参考，无需照抄）】
+${q.explanation}
+
+【教育目标】${q.objective}
+
+# 输出格式（必须严格遵守）
+
+输出 markdown。**所有法律规则名词、要件名、罪名、法理概念必须用「英文 中文」双语呈现**，格式为 \`**hearsay 传闻证据**\` 或 \`**mens rea 犯罪心态**\`。这是为了加深术语记忆，是核心要求。
+
+按以下结构输出（不要省略任何一节，每节之间空一行）：
+
+### 📖 核心规则 Core Rule
+2-3 句话讲清楚本题考的法律规则及关键要件，用双语标注每个术语。
+要件多于 2 个时用 markdown 表格列出：
+
+| 要件 Element | 含义 |
+|---|---|
+| ... | ... |
+
+### 🔍 本题套用 Applied
+对照规则要件，把案件事实一一映射进去。
+
+### ✅ 选项剖析 Choices
+四个选项每个一行，格式必须是：
+- **A** ✓ / ✗: 一句话理由
+- **B** ✓ / ✗: 一句话理由
+- **C** ✓ / ✗: 一句话理由
+- **D** ✓ / ✗: 一句话理由
+
+### 🪤 易错陷阱 Common Traps
+本题里出题人最常设置的 1-2 个"坑"（学生最容易上当的错误推理路径）。每个 trap 解释：
+- 出题人怎么诱导你选错
+- 怎么识破
+
+### 🔄 常见事实模式 Fact Patterns
+这类知识点在 MBE 里常见的 2-3 种 fact pattern 变体（不只是本题），让学生学会举一反三。可以用表格：
+
+| 事实模式 | 答案方向 |
+|---|---|
+| 模式1：... | ⇒ ... |
+| 模式2：... | ⇒ ... |
+
+### 💡 锦囊妙计 Strategy
+1-2 条记忆口诀或答题速记。看到什么词条件反射想到什么。
+
+### 📚 易混对比 Easily Confused
+跟本题最容易混淆的 1-2 个相邻概念。**必须用表格对比**：
+
+| 维度 | 本题考的 X | 易混的 Y |
+|---|---|---|
+| ... | ... | ... |
+
+# 风格要求
+- 直接、不啰嗦、不写"首先/其次/综上"这类废话
+- 像辅导老师对学生口头讲解，不用太正式
+- 所有关键术语双语化（英文 + 中文同时出现）
+- 该用表格的地方就用表格`;
+}
+
+async function callAIRewrite(q) {
+  const cfg = loadAIConfig();
+  if (!cfg || !cfg.apiKey) {
+    throw new Error("未配置 API key");
+  }
+  const provider = AI_PROVIDERS[cfg.provider];
+  if (!provider) throw new Error("未知服务商: " + cfg.provider);
+
+  const lastChoice = state.answered[q.id] ? state.answered[q.id].choice : q.answer;
+  const prompt = aiBuildPrompt(q, lastChoice);
+  const model = cfg.model || provider.defaultModel;
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + cfg.apiKey,
+  };
+  // OpenRouter app-attribution headers: only X-Title is safe to set from
+  // browser JS. The "Referer" header is forbidden — browsers block any attempt
+  // to set it from fetch() and the request will be rejected by CORS preflight.
+  // OpenRouter will use the browser's automatic Origin/Referer for attribution.
+  if (cfg.provider === "openrouter") {
+    headers["X-Title"] = "MBE QBank";
+  }
+
+  let resp;
+  try {
+    resp = await fetch(provider.endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: "你是一位经验丰富的美国律考辅导老师，用中文给中国学生讲解。" },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.4,
+        max_tokens: 2500,
+      }),
+    });
+  } catch (netErr) {
+    // Network / CORS errors land here — TypeError: Failed to fetch
+    throw new Error(`网络错误: ${netErr.message}. 可能是网络不通 / CORS 被拦 / endpoint 写错`);
+  }
+
+  if (!resp.ok) {
+    const text = await resp.text();
+    // Try to parse as JSON for nicer error
+    let detail = text.slice(0, 400);
+    try {
+      const j = JSON.parse(text);
+      if (j.error) detail = (j.error.message || j.error.code || JSON.stringify(j.error)).slice(0, 400);
+    } catch {}
+    throw new Error(`HTTP ${resp.status} (${resp.statusText}): ${detail}`);
+  }
+  const data = await resp.json();
+  // OpenAI-compatible shape: { choices: [{ message: { content } }] }
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) {
+    // Some providers return reasoning + content split, or error fields
+    if (data.error) throw new Error("API 错误: " + (data.error.message || JSON.stringify(data.error)));
+    throw new Error("返回内容为空。完整响应: " + JSON.stringify(data).slice(0, 300));
+  }
+  return content;
+}
+
+// Lightweight markdown renderer for AI output:
+// supports h3/h4, lists, bold, code, paragraphs, AND markdown tables.
+// Also detects bilingual term pairs inside **bold** (e.g. "hearsay 传闻证据")
+// and gives the English part a subtle visual treatment so terms read like flashcards.
+function renderMarkdown(md) {
+  // Tables: detect blocks of:
+  //   | h1 | h2 |
+  //   |----|----|
+  //   | r1 | r2 |
+  // We process tables FIRST (before escaping) by scanning line-by-line,
+  // since the table syntax uses pipe chars that escapeHtml() leaves alone.
+
+  // Normalize line endings, strip leading/trailing blank lines
+  md = md.replace(/\r\n/g, "\n");
+
+  const lines = md.split("\n");
+  const segments = []; // alternating { type: "text", text } or { type: "table", html }
+  let buf = [];
+  let i = 0;
+  while (i < lines.length) {
+    // Look for a table header line: starts with `|` and the NEXT line is a separator like `|---|---|`
+    const line = lines[i];
+    const next = lines[i + 1] || "";
+    const isTableHeader = /^\s*\|.*\|\s*$/.test(line) &&
+      /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(next);
+    if (isTableHeader) {
+      // Flush the current text buffer
+      if (buf.length) { segments.push({ type: "text", text: buf.join("\n") }); buf = []; }
+      // Collect table rows
+      const headerCells = line.split("|").slice(1, -1).map(s => s.trim());
+      // Skip separator
+      const tableRows = [];
+      let j = i + 2;
+      while (j < lines.length && /^\s*\|.*\|\s*$/.test(lines[j])) {
+        tableRows.push(lines[j].split("|").slice(1, -1).map(s => s.trim()));
+        j++;
+      }
+      // Build the table HTML — inline content goes through inlineRender below
+      const thead = "<thead><tr>" + headerCells.map(c => `<th>${inlineRender(c)}</th>`).join("") + "</tr></thead>";
+      const tbody = "<tbody>" + tableRows.map(r =>
+        "<tr>" + r.map(c => `<td>${inlineRender(c)}</td>`).join("") + "</tr>"
+      ).join("") + "</tbody>";
+      segments.push({ type: "table", html: `<table class="md-table">${thead}${tbody}</table>` });
+      i = j;
+      continue;
+    }
+    buf.push(line);
+    i++;
+  }
+  if (buf.length) segments.push({ type: "text", text: buf.join("\n") });
+
+  // Now render each segment
+  const out = segments.map(seg => {
+    if (seg.type === "table") return seg.html;
+    return renderTextBlock(seg.text);
+  });
+  return out.join("\n");
+}
+
+// Inline renderer: bold, code, bilingual terms. Used for both text and table cells.
+function inlineRender(text) {
+  let s = escapeHtml(text);
+  // Code spans
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Bilingual term: **EnglishWord Chinese** → wrap each part separately
+  // Detect: bold content where there's an English word followed by Chinese characters.
+  // Pattern: ** ... english ... CJK ... **
+  s = s.replace(/\*\*([^*]+)\*\*/g, (match, inner) => {
+    // Look for "english chinese" bilingual pattern
+    // The bold may contain: "hearsay 传闻证据" or "mens rea 犯罪心态"
+    const bilingual = inner.match(/^([A-Za-z][A-Za-z\s\-'/.,]*?)\s+([\u4e00-\u9fff][\u4e00-\u9fff\s（）/、，·—.,()]*?)$/);
+    if (bilingual) {
+      const en = bilingual[1].trim();
+      const cn = bilingual[2].trim();
+      return `<span class="md-bilingual"><span class="md-bilingual-en">${en}</span> <span class="md-bilingual-cn">${cn}</span></span>`;
+    }
+    // Plain bold
+    return `<strong>${inner}</strong>`;
+  });
+  // Italic *text* (after bold so we don't conflict)
+  s = s.replace(/(?<![*])\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+  return s;
+}
+
+// Block-level processing for non-table chunks
+function renderTextBlock(text) {
+  // Headings
+  let html = text;
+  html = html.replace(/^####\s+(.+)$/gm, m => "<h4>" + inlineRender(m.replace(/^####\s+/, "")) + "</h4>");
+  html = html.replace(/^###\s+(.+)$/gm, m => "<h3>" + inlineRender(m.replace(/^###\s+/, "")) + "</h3>");
+  html = html.replace(/^##\s+(.+)$/gm, m => "<h3>" + inlineRender(m.replace(/^##\s+/, "")) + "</h3>");
+
+  // Split into blocks by blank lines
+  const blocks = html.split(/\n\n+/);
+  const out = blocks.map(block => {
+    const trimmed = block.trim();
+    if (!trimmed) return "";
+    const lines = trimmed.split("\n");
+    // Pure heading
+    if (/^<h[34]>.*<\/h[34]>$/.test(trimmed)) return trimmed;
+    // Pure list block
+    if (lines.every(l => /^\s*[-*]\s+/.test(l) || !l.trim())) {
+      const items = lines.filter(l => l.trim()).map(l => inlineRender(l.replace(/^\s*[-*]\s+/, "")));
+      return `<ul>${items.map(it => `<li>${it}</li>`).join("")}</ul>`;
+    }
+    // Numbered list
+    if (lines.every(l => /^\s*\d+\.\s+/.test(l) || !l.trim())) {
+      const items = lines.filter(l => l.trim()).map(l => inlineRender(l.replace(/^\s*\d+\.\s+/, "")));
+      return `<ol>${items.map(it => `<li>${it}</li>`).join("")}</ol>`;
+    }
+    // Otherwise: a paragraph (apply inline + keep <br> for single line breaks).
+    // But the lines might be a list mixed with headings already converted — handle gracefully.
+    const inline = lines.map(l => {
+      if (/^<h[34]>.*<\/h[34]>$/.test(l)) return l;
+      return inlineRender(l);
+    }).join("<br>");
+    return `<p>${inline}</p>`;
+  });
+  return out.filter(Boolean).join("\n");
+}
+
+async function doAIRewrite() {
+  const q = currentQ();
+  if (!q) return;
+  const cfg = loadAIConfig();
+  if (!cfg || !cfg.apiKey) {
+    openAISetup();
+    return;
+  }
+  const container = document.getElementById("ai-result-container");
+  const btn = document.getElementById("btn-ai-rewrite");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="loading">AI 思考中</span>`;
+  container.innerHTML = `<div class="ai-result" data-provider="${AI_PROVIDERS[cfg.provider].name}"><p class="loading">正在生成解析…大约 5-15 秒</p></div>`;
+  try {
+    const content = await callAIRewrite(q);
+    container.innerHTML = `<div class="ai-result" data-provider="${AI_PROVIDERS[cfg.provider].name}">${renderMarkdown(content)}</div>`;
+  } catch (e) {
+    console.error(e);
+    const msg = e.message || "AI 请求失败";
+    // Build a hint based on the error
+    let hint = "";
+    if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("网络错误")) {
+      hint = "可能原因：网络不通 / endpoint 被墙 / CORS 拦截。OpenRouter 在国内通常需要梯子。";
+    } else if (msg.includes("401") || msg.includes("Unauthorized")) {
+      hint = "API key 无效，去服务商网站重新生成。";
+    } else if (msg.includes("402") || msg.includes("balance") || msg.includes("credit")) {
+      hint = "余额不足。OpenRouter 用免费模型也需要账户里有少量 credit 才解锁。";
+    } else if (msg.includes("404")) {
+      hint = "模型名写错了。常用免费模型：deepseek/deepseek-chat-v3.1:free, meta-llama/llama-3.3-70b-instruct:free";
+    } else if (msg.includes("429")) {
+      hint = "触发速率限制，免费模型每天有上限。等几分钟再试。";
+    }
+    container.innerHTML = `<div class="ai-result" data-provider="错误">
+      <p style="color:var(--wrong);font-weight:600;margin-bottom:8px">⚠ AI 调用失败</p>
+      <p style="font-size:13px;color:var(--ink);background:rgba(0,0,0,0.04);padding:8px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;word-break:break-word">${escapeHtml(msg)}</p>
+      ${hint ? `<p style="font-size:13px;color:var(--ink-2);margin-top:8px">💡 ${escapeHtml(hint)}</p>` : ""}
+      <p style="font-size:12.5px;color:var(--ink-3);margin-top:10px">点 <button class="btn ghost" style="padding:3px 8px;font-size:12px" onclick="openAISetup()">⚙ 设置</button> 用「测试连接」按钮排查</p>
+    </div>`;
+    toast("AI 调用失败：" + msg.slice(0, 60));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "重写解析";
+  }
+}
+
+// AI Setup modal
+function openAISetup() {
+  const cfg = loadAIConfig() || { provider: "deepseek", apiKey: "", model: "" };
+  document.querySelectorAll("#ai-provider-select .ai-setup-provider").forEach(b => {
+    b.classList.toggle("active", b.dataset.provider === cfg.provider);
+  });
+  document.getElementById("ai-key-input").value = cfg.apiKey || "";
+  document.getElementById("ai-model-input").value = cfg.model || "";
+  document.getElementById("ai-model-input").placeholder = AI_PROVIDERS[cfg.provider].defaultModel;
+  document.getElementById("ai-setup-hint").innerHTML = AI_PROVIDERS[cfg.provider].hint;
+  // Clear any previous test result
+  const testEl = document.getElementById("ai-test-result");
+  if (testEl) {
+    if (location.protocol === "file:") {
+      testEl.style.display = "block";
+      testEl.innerHTML = `<div style="padding:10px 12px;background:#eef4f9;border-left:3px solid #3a6b8a;border-radius:6px;font-size:12.5px;color:#2b5673;line-height:1.6">
+        💡 你正在用 <code>file://</code> 打开此页面。绝大多数情况能正常调用 OpenRouter / DeepSeek，但少数浏览器（Safari/Firefox 严格设置）可能拦截 <code>Origin: null</code>。如果测试失败，<b>可以试着用 Chrome / Edge</b>。
+      </div>`;
+    } else {
+      testEl.style.display = "none";
+      testEl.innerHTML = "";
+    }
+  }
+  document.getElementById("ai-modal-backdrop").classList.add("show");
+}
+function closeAISetup() {
+  document.getElementById("ai-modal-backdrop").classList.remove("show");
+}
+function selectAIProvider(provider) {
+  document.querySelectorAll("#ai-provider-select .ai-setup-provider").forEach(b => {
+    b.classList.toggle("active", b.dataset.provider === provider);
+  });
+  document.getElementById("ai-model-input").placeholder = AI_PROVIDERS[provider].defaultModel;
+  document.getElementById("ai-setup-hint").innerHTML = AI_PROVIDERS[provider].hint;
+  // Clear test result since the provider changed
+  const testEl = document.getElementById("ai-test-result");
+  if (testEl) { testEl.style.display = "none"; testEl.innerHTML = ""; }
+}
+function saveAISetup() {
+  const provider = document.querySelector("#ai-provider-select .ai-setup-provider.active")?.dataset.provider || "deepseek";
+  const apiKey = document.getElementById("ai-key-input").value.trim();
+  const model = document.getElementById("ai-model-input").value.trim();
+  saveAIConfig({ provider, apiKey, model });
+  closeAISetup();
+  updateAIPanelStatus();
+  toast(apiKey ? `已保存 ${AI_PROVIDERS[provider].name} 配置` : "已清除 AI 配置");
+}
+
+// Test the connection without saving the config. Uses what's currently in the form.
+async function testAIConnection() {
+  const provider = document.querySelector("#ai-provider-select .ai-setup-provider.active")?.dataset.provider || "deepseek";
+  const apiKey = document.getElementById("ai-key-input").value.trim();
+  const model = (document.getElementById("ai-model-input").value.trim() || AI_PROVIDERS[provider].defaultModel);
+  const resultEl = document.getElementById("ai-test-result");
+  const btn = document.getElementById("ai-modal-test");
+
+  if (!apiKey) {
+    resultEl.style.display = "block";
+    resultEl.innerHTML = `<div style="padding:10px 12px;background:var(--wrong-tint);border-left:3px solid var(--wrong);border-radius:6px;font-size:13px;color:#6a2515">⚠ 请先填入 API key</div>`;
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = `<span class="loading">测试中</span>`;
+  resultEl.style.display = "block";
+  resultEl.innerHTML = `<div style="padding:10px 12px;background:var(--paper-2);border-radius:6px;font-size:13px;color:var(--ink-3)">正在用 <b>${escapeHtml(model)}</b> 测试连接…</div>`;
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + apiKey,
+  };
+  if (provider === "openrouter") headers["X-Title"] = "MBE QBank";
+
+  try {
+    const resp = await fetch(AI_PROVIDERS[provider].endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: "Say only the two characters: OK" }],
+        max_tokens: 10,
+      }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      let detail = text.slice(0, 400);
+      try {
+        const j = JSON.parse(text);
+        if (j.error) detail = j.error.message || j.error.code || JSON.stringify(j.error);
+      } catch {}
+      throw new Error(`HTTP ${resp.status} — ${detail}`);
+    }
+    const data = await resp.json();
+    const reply = data.choices?.[0]?.message?.content || "(空回复)";
+    resultEl.innerHTML = `<div style="padding:10px 12px;background:var(--correct-tint);border-left:3px solid var(--correct);border-radius:6px;font-size:13px;color:#1d4d2f">
+      ✓ 连接成功！模型回复: <code style="background:rgba(255,255,255,0.5);padding:1px 5px;border-radius:3px">${escapeHtml(reply.trim().slice(0, 80))}</code>
+    </div>`;
+  } catch (e) {
+    let hint = "";
+    const msg = e.message || String(e);
+    if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+      hint = "<br><br>💡 可能原因：<br>1. 网络无法访问该 endpoint（OpenRouter 在国内可能需要梯子）<br>2. 浏览器 CORS 拦截<br>3. endpoint URL 写错";
+    } else if (msg.includes("401") || msg.includes("Unauthorized") || msg.includes("invalid")) {
+      hint = "<br><br>💡 API key 无效或已撤销。去 " + (provider === "openrouter" ? "openrouter.ai/keys" : "platform.deepseek.com/api_keys") + " 重新生成";
+    } else if (msg.includes("402") || msg.includes("balance") || msg.includes("Insufficient") || msg.includes("credit")) {
+      hint = "<br><br>💡 余额不足。OpenRouter 免费模型需账户里有少量 credit (≥$5) 才能解锁更高额度；DeepSeek 需充值。";
+    } else if (msg.includes("404") || msg.includes("not found") || msg.includes("model")) {
+      hint = `<br><br>💡 模型名 <code>${escapeHtml(model)}</code> 可能写错。OpenRouter 推荐:<br><code>deepseek/deepseek-chat-v3.1:free</code><br><code>meta-llama/llama-3.3-70b-instruct:free</code><br><code>google/gemini-2.0-flash-exp:free</code>`;
+    } else if (msg.includes("429")) {
+      hint = "<br><br>💡 触发速率限制。免费模型每天有调用次数上限。等几分钟再试。";
+    }
+    resultEl.innerHTML = `<div style="padding:10px 12px;background:var(--wrong-tint);border-left:3px solid var(--wrong);border-radius:6px;font-size:13px;color:#6a2515;word-break:break-word">
+      ✗ <b>${escapeHtml(msg)}</b>${hint}
+    </div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "🧪 测试连接";
+  }
+}
+
+function updateAIPanelStatus() {
+  const cfg = loadAIConfig();
+  const status = document.getElementById("ai-panel-status");
+  if (!status) return;
+  if (cfg && cfg.apiKey) {
+    const p = AI_PROVIDERS[cfg.provider];
+    status.innerHTML = `已连 <b>${p ? p.name : cfg.provider}</b>${cfg.model ? ` · ${escapeHtml(cfg.model)}` : ""}`;
+  } else {
+    status.textContent = "让大模型用中文重新讲一遍解析";
+  }
+}
+
+
+// =====================================================================
+// UI BINDINGS
+// =====================================================================
+document.getElementById("nav-home").addEventListener("click", () => { stopTimer(); showScreen("home"); renderHome(); });
+document.getElementById("nav-stats").addEventListener("click", () => { stopTimer(); showScreen("stats"); renderStats(); });
+
+document.getElementById("btn-exit").addEventListener("click", () => { stopTimer(); showScreen("home"); renderHome(); });
+document.getElementById("btn-next").addEventListener("click", nextQuestion);
+
+document.getElementById("btn-continue").addEventListener("click", () => {
+  startQuiz({ subject: session.subject, count: 10, mode: session.mode });
+});
+document.getElementById("btn-back-home").addEventListener("click", () => { showScreen("home"); renderHome(); });
+
+document.getElementById("btn-reset").addEventListener("click", () => {
+  if (confirm("确定重置所有进度？这会清空答题记录、错题库和遗忘曲线数据。")) {
+    state = { ...DEFAULT_STATE };
+    saveState();
+    renderStats();
+    toast("已重置");
+  }
+});
+
+// Lang switch
+document.querySelectorAll("#lang-switch button").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll("#lang-switch button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    translateCurrentQuestion(b.dataset.lang);
+  });
+});
+
+document.getElementById("translate-btn").addEventListener("click", translateExplanation);
+
+// "Open in Google Translate" buttons — opens translate.google.com with the text prefilled
+document.getElementById("btn-open-google").addEventListener("click", () => {
+  const q = currentQ();
+  if (!q) return;
+  const text = q.stem + "\n\nA. " + q.choices.A + "\nB. " + q.choices.B + "\nC. " + q.choices.C + "\nD. " + q.choices.D;
+  openInGoogleTranslate(text);
+  toast("已在新标签页打开 Google 翻译");
+});
+
+document.getElementById("btn-open-google-exp").addEventListener("click", () => {
+  const q = currentQ();
+  if (!q) return;
+  const text = "Explanation:\n" + q.explanation + (q.objective ? "\n\nObjective:\n" + q.objective : "");
+  openInGoogleTranslate(text);
+  toast("已在新标签页打开 Google 翻译");
+});
+
+// Comparison-table modal — open/close
+function openComparisonTable(tableId) {
+  const t = COMPARISON_TABLES.find(c => c.id === tableId);
+  if (!t) return;
+  document.getElementById("modal-tag").textContent = (SUBJECTS[t.subject] ? SUBJECTS[t.subject].short + " · " : "") + "对比记忆";
+  document.getElementById("modal-title").textContent = t.title;
+
+  const headers = t.columns.map(c => `<th>${escapeHtml(c)}</th>`).join("");
+  const rows = t.rows.map(row =>
+    `<tr>${row.map((cell, i) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`
+  ).join("");
+  let relatedHtml = "";
+  if (t.related_terms && t.related_terms.length) {
+    relatedHtml = `<div class="cmp-related-terms">
+      <strong>相关术语：</strong> ${t.related_terms.map(rt => {
+        const gt = GLOSSARY_TERMS[GLOSSARY_ORDER.find(k => k.toLowerCase() === rt.toLowerCase())];
+        return gt ? `${escapeHtml(rt)} (${escapeHtml(gt.cn)})` : escapeHtml(rt);
+      }).join(" · ")}
+    </div>`;
+  }
+
+  document.getElementById("modal-body").innerHTML =
+    `<table class="cmp-table"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>${relatedHtml}`;
+
+  document.getElementById("modal-backdrop").classList.add("show");
+}
+function closeModal() {
+  document.getElementById("modal-backdrop").classList.remove("show");
+}
+document.getElementById("modal-close").addEventListener("click", closeModal);
+document.getElementById("modal-close-2").addEventListener("click", closeModal);
+document.getElementById("modal-backdrop").addEventListener("click", e => {
+  // Only close if clicking the backdrop itself, not the modal content
+  if (e.target.id === "modal-backdrop") closeModal();
+});
+
+// Event delegation: tooltip links + related-table chips + extend chips all open the modal
+document.body.addEventListener("click", e => {
+  const tableLink = e.target.closest(".tooltip-link, .related-table-chip, .extend-chip.table");
+  if (tableLink && tableLink.dataset.tableId) {
+    e.preventDefault();
+    e.stopPropagation();
+    openComparisonTable(tableLink.dataset.tableId);
+    return;
+  }
+  // Term chip — clicking shows a quick tooltip-style alert/scroll to term in stem
+  const termChip = e.target.closest(".extend-chip.term");
+  if (termChip && termChip.dataset.term) {
+    e.preventDefault();
+    // Scroll to first occurrence of this term in the stem/explanation
+    const target = document.querySelector(`.term[data-term="${termChip.dataset.term.replace(/"/g, '\\"')}"]`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Briefly flash
+      target.style.transition = "box-shadow 0.2s";
+      target.style.boxShadow = "0 0 0 3px rgba(179,128,31,.6)";
+      setTimeout(() => { target.style.boxShadow = ""; }, 1000);
+    } else {
+      // Term not in current question — show a small info toast
+      const cn = GLOSSARY_TERMS[termChip.dataset.term];
+      toast(termChip.dataset.term + (cn ? " · " + cn.cn : ""));
+    }
+  }
+});
+
+// AI rewrite buttons
+document.getElementById("btn-ai-rewrite").addEventListener("click", doAIRewrite);
+document.getElementById("btn-ai-setup").addEventListener("click", openAISetup);
+document.getElementById("ai-modal-close").addEventListener("click", closeAISetup);
+document.getElementById("ai-modal-cancel").addEventListener("click", closeAISetup);
+document.getElementById("ai-modal-save").addEventListener("click", saveAISetup);
+document.getElementById("ai-modal-test").addEventListener("click", testAIConnection);
+document.querySelectorAll("#ai-provider-select .ai-setup-provider").forEach(b => {
+  b.addEventListener("click", () => selectAIProvider(b.dataset.provider));
+});
+document.getElementById("ai-modal-backdrop").addEventListener("click", e => {
+  if (e.target.id === "ai-modal-backdrop") closeAISetup();
+});
+
+// SRS quality buttons
+document.querySelectorAll(".srs-q-btn").forEach(b => {
+  b.addEventListener("click", () => {
+    const q = parseInt(b.dataset.q);
+    const qId = currentQ().id;
+    srsUpdate(qId, q);
+    toast(["再练一次", "", "", "1天后再练", "约 4 天后", "约 7 天后"][q] || "已记录");
+    document.getElementById("srs-quality").classList.remove("show");
+  });
+});
+
+// Keyboard shortcuts
+document.addEventListener("keydown", e => {
+  // Modal escape — handle first
+  if (e.key === "Escape") {
+    if (document.getElementById("ai-modal-backdrop").classList.contains("show")) {
+      closeAISetup(); return;
+    }
+    if (document.getElementById("modal-backdrop").classList.contains("show")) {
+      closeModal(); return;
+    }
+  }
+  if (document.getElementById("screen-quiz").classList.contains("active")) {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+    const k = e.key.toUpperCase();
+    if (["A", "B", "C", "D"].includes(k) && !document.querySelector(".choice.locked")) {
+      e.preventDefault();
+      selectChoice(k);
+    } else if ((e.key === "Enter" || e.key === " ") && !document.getElementById("btn-next").disabled) {
+      e.preventDefault();
+      nextQuestion();
+    } else if (e.key === "Escape") {
+      stopTimer(); showScreen("home"); renderHome();
+    }
+  }
+});
+
+// Toast helper
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// PWA boot — fetch data, register SW, then render
+async function __boot() {
+  try {
+    const [qResp, gResp] = await Promise.all([
+      fetch("data/questions.json"),
+      fetch("data/glossary.json"),
+    ]);
+    if (!qResp.ok || !gResp.ok) throw new Error("数据加载失败 HTTP " + qResp.status + "/" + gResp.status);
+    QUESTIONS = await qResp.json();
+    GLOSSARY_DATA = await gResp.json();
+    __DATA_READY = true;
+    __initRuntimeAfterDataLoaded();
+    document.getElementById("boot-screen").style.display = "none";
+    renderHome();
+    updateAIPanelStatus();
+  } catch (e) {
+    console.error(e);
+    const bs = document.getElementById("boot-screen");
+    bs.innerHTML = '<div style="text-align:center;padding:40px 20px;font-family:sans-serif;color:#1a1612"><div style="font-size:36px;margin-bottom:10px">⚠</div><div style="font-size:18px;font-weight:600;margin-bottom:6px">数据加载失败</div><div style="font-size:14px;color:#7a7065;margin-bottom:14px">' + (e.message || "未知错误") + '</div><button onclick="location.reload()" style="padding:10px 18px;border-radius:8px;border:1px solid #1a1612;background:#1a1612;color:white;font-size:14px;cursor:pointer">重新加载</button></div>';
+  }
+}
+
+// Compute lookups that depend on GLOSSARY_DATA being loaded.
+// These were previously top-level consts; we move them into a function that runs
+// once data is ready, then expose the results to the rest of the code.
+function __initRuntimeAfterDataLoaded() {
+  // The original code defines GLOSSARY_ORDER / GLOSSARY_TERMS / TERM_TO_TABLES / etc.
+  // by reading GLOSSARY_DATA at module-load time. Since data now loads async, we
+  // need to recompute them here. We use a global flag + lazy property approach:
+  // every consumer just reads from window.GLOSSARY_ORDER etc., which we set now.
+  window.GLOSSARY_ORDER = GLOSSARY_DATA.order;
+  window.GLOSSARY_TERMS = GLOSSARY_DATA.terms;
+  window.COMPARISON_TABLES = GLOSSARY_DATA.comparisons || [];
+  window.VOCAB_TERMS = GLOSSARY_DATA.vocab || {};
+  window.VOCAB_ORDER = GLOSSARY_DATA.vocab_order || [];
+  window.ISSUE_PATTERNS = GLOSSARY_DATA.issue_patterns || [];
+
+  // Rebuild the regexes and lookups that were originally constants
+  TERM_TO_TABLES = {};
+  COMPARISON_TABLES.forEach(t => {
+    (t.related_terms || []).forEach(rt => {
+      const k = rt.toLowerCase();
+      if (!TERM_TO_TABLES[k]) TERM_TO_TABLES[k] = [];
+      TERM_TO_TABLES[k].push(t.id);
+    });
+  });
+
+  ANNOTATION_SKIP = new Set(
+    Object.entries(GLOSSARY_TERMS)
+      .filter(([k, v]) => v.skip_annotate)
+      .map(([k]) => k.toLowerCase())
+  );
+
+  GLOSSARY_REGEX = (() => {
+    const parts = GLOSSARY_ORDER
+      .filter(t => !ANNOTATION_SKIP.has(t.toLowerCase()))
+      .map(t => t.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"));
+    return new RegExp("(^|[^a-zA-Z])(" + parts.join("|") + ")(?![a-zA-Z])", "gi");
+  })();
+
+  VOCAB_REGEX = VOCAB_ORDER.length ? (() => {
+    const parts = VOCAB_ORDER.map(t => t.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"));
+    return new RegExp("(^|[^a-zA-Z])(" + parts.join("|") + ")(?![a-zA-Z])", "gi");
+  })() : null;
+}
+
+// Service Worker registration (only if served via http/https, not file://)
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js")
+      .then(reg => console.log("[SW] registered, scope:", reg.scope))
+      .catch(err => console.warn("[SW] registration failed:", err));
+  });
+}
+
+__boot();
+</script>
+
+</body>
+</html>
